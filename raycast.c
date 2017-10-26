@@ -46,7 +46,7 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
   }
   
   // Calculate the t scalar of intersection
-  vector3_t subVector = vector3_create(0, 0, 0);;
+  vector3_t subVector = vector3_create(0, 0, 0);
   vector3_sub(subVector, plane->position, direction);
   double t = vector3_dot(subVector, plane->normal) / product;
 
@@ -68,25 +68,27 @@ vector3_t raycast(object_t **scene, vector3_t direction, int numObjects) {
 
     // Current object and t value
     object_t *object = scene[i];
-    vector3_t color;
+    vector3_t diffuseColor;
     double t;
 
     // Determine which intersection type to check for
     if (object->kind == OBJECT_KIND_SPHERE) {
       sphere_t *sphere = (sphere_t *) object; // Convert to sphere
-      color = sphere->color;
+      diffuseColor = sphere->diffuse_color;
       t = sphereIntersection(direction, sphere);
     }
     else if (object->kind == OBJECT_KIND_PLANE) {
       plane_t *plane = (plane_t *) object; // Convert to plane
-      color = plane->color;
+      diffuseColor = plane->diffuse_color;
       t = planeIntersection(direction, plane);
     }
+
+    // TODO: Add specular color calculation
 
     // If the current t was closer than all before, save the color
     if (t != NO_INTERSECTION_FOUND && t < closestT) {
       closestT = t;
-      closestColor = color;
+      closestColor = diffuseColor;
     }
   }
 
@@ -167,7 +169,7 @@ int main(int argc, char *argv[]) {
 
   // Handle errors found in parseInput
   if (numObjects < 0) {
-    fprintf(stderr, "Error: Malformed input CSV\n", outputFName);
+    fprintf(stderr, "Error: Malformed input CSV\n");
     return 1;
   }
 

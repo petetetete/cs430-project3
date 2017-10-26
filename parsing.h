@@ -11,6 +11,7 @@
 #define OBJECT_KIND_CAMERA 1
 #define OBJECT_KIND_SPHERE 2
 #define OBJECT_KIND_PLANE 3
+#define OBJECT_KIND_LIGHT 4
 
 // Error code constants
 #define INVALID_PARSE_LINE -4
@@ -24,6 +25,7 @@ typedef struct object_t object_t;
 typedef struct camera_t camera_t;
 typedef struct sphere_t sphere_t;
 typedef struct plane_t plane_t;
+typedef struct light_t light_t;
 
 struct object_t {
   int kind;
@@ -37,16 +39,27 @@ struct camera_t {
 
 struct sphere_t {
   struct object_t;
-  vector3_t color;
+  vector3_t diffuse_color;
+  vector3_t specular_color;
   vector3_t position;
   double radius;
 };
 
 struct plane_t {
   struct object_t;
-  vector3_t color;
+  vector3_t diffuse_color;
   vector3_t position;
   vector3_t normal;
+};
+
+struct light_t {
+  struct object_t;
+  vector3_t color;
+  double theta;
+  double radial_a2;
+  double radial_a1;
+  double radial_a0;
+  vector3_t position;
 };
 
 

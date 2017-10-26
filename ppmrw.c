@@ -94,9 +94,9 @@ int readPPM(ppm_t *output, FILE *file) {
   output->maxColorValue = atoi(maxColorValue);
 
   // Catch invalid inputs (strings) and just non-sensical dimensions 
-  if (output->width == 0 ||
-      output->height == 0 ||
-      output->maxColorValue == 0) {
+  if (output->width <= 0 ||
+      output->height <= 0 ||
+      output->maxColorValue <= 0) {
     return MALFORMED_HEADER;
   }
 
@@ -135,7 +135,7 @@ int writePPM(ppm_t *image, FILE *file, int newFormat) {
   }
   else {
     for (int i = 0; i < image->width*image->height; i++) {
-      fprintf(file, "%d %d %d  \n",
+      fprintf(file, "%d %d %d\n",
         image->pixels[i].r,
         image->pixels[i].g,
         image->pixels[i].b);

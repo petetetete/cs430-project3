@@ -41,30 +41,32 @@ int parseSphere(sphere_t *sphere, char *line) {
   sphere->kind = OBJECT_KIND_SPHERE;
 
   // Variables to parse in to
-  vector3_t color = vector3_create(INFINITY, INFINITY, INFINITY);
+  vector3_t diffuseColor = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY);
   double radius = INFINITY;
 
   // Try to find width and height elements in file
-  char *colorStart = strstr(line, "color:");
+  char *diffuseColorStart = strstr(line, "diffuse_color:");
   char *positionStart = strstr(line, "position:");
   char *radiusStart = strstr(line, "radius:");
 
-  if (colorStart == NULL || positionStart == NULL || radiusStart == NULL) {
+  if (diffuseColorStart == NULL ||
+      positionStart == NULL ||
+      radiusStart == NULL) {
     return INVALID_PARSE_LINE;
   }
 
   // Increment pointer beyond the initial scan string
-  sscanf(colorStart + 6, " [%lf , %lf , %lf],",
-    &color[0], &color[1], &color[2]);
+  sscanf(diffuseColorStart + 14, " [%lf , %lf , %lf],",
+    &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
     &position[0], &position[1], &position[2]);
   sscanf(radiusStart + 7, "%lf,", &radius);
 
   // Catch invalid values
-  if (color[0] == INFINITY ||
-      color[1] == INFINITY ||
-      color[2] == INFINITY ||
+  if (diffuseColor[0] == INFINITY ||
+      diffuseColor[1] == INFINITY ||
+      diffuseColor[2] == INFINITY ||
       position[0] == INFINITY ||
       position[1] == INFINITY ||
       position[2] == INFINITY ||
@@ -74,7 +76,7 @@ int parseSphere(sphere_t *sphere, char *line) {
   else {
 
     // Populate sphere
-    sphere->color = color;
+    sphere->diffuse_color = diffuseColor;
     sphere->position = position;
     sphere->radius = radius;
 
@@ -87,31 +89,31 @@ int parsePlane(plane_t *plane, char *line) {
   plane->kind = OBJECT_KIND_PLANE;
 
   // Variables to parse in to
-  vector3_t color = vector3_create(INFINITY, INFINITY, INFINITY);
+  vector3_t diffuseColor = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t normal = vector3_create(INFINITY, INFINITY, INFINITY);
 
   // Try to find width and height elements in file
-  char *colorStart = strstr(line, "color:");
+  char *diffuseColorStart = strstr(line, "diffuse_color:");
   char *positionStart = strstr(line, "position:");
   char *normalStart = strstr(line, "normal:");
 
-  if (colorStart == NULL || positionStart == NULL || normalStart == NULL) {
+  if (diffuseColorStart == NULL || positionStart == NULL || normalStart == NULL) {
     return INVALID_PARSE_LINE;
   }
 
   // Increment pointer beyond the initial scan string
-  sscanf(colorStart + 6, " [%lf , %lf , %lf],",
-    &color[0], &color[1], &color[2]);
+  sscanf(diffuseColorStart + 14, " [%lf , %lf , %lf],",
+    &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
     &position[0], &position[1], &position[2]);
   sscanf(normalStart + 7, " [%lf , %lf , %lf],",
     &normal[0], &normal[1], &normal[2]);
 
   // Catch invalid values
-  if (color[0] == INFINITY ||
-      color[1] == INFINITY ||
-      color[2] == INFINITY ||
+  if (diffuseColor[0] == INFINITY ||
+      diffuseColor[1] == INFINITY ||
+      diffuseColor[2] == INFINITY ||
       position[0] == INFINITY ||
       position[1] == INFINITY ||
       position[2] == INFINITY ||
@@ -123,7 +125,7 @@ int parsePlane(plane_t *plane, char *line) {
   else {
 
     // Populate sphere
-    plane->color = color;
+    plane->diffuse_color = diffuseColor;
     plane->position = position;
     plane->normal = normal;
 
@@ -137,6 +139,7 @@ int parseInput(camera_t *camera, object_t **scene, FILE *file) {
   int errorStatus = 0;
   int numObjects = 0;
   int cameraFound = 1; // Default to false
+  int lineNumber = 1;
   char line[MAX_LINE_LENGTH];
 
   while (fgets(line, MAX_LINE_LENGTH, file)) {
@@ -172,6 +175,12 @@ int parseInput(camera_t *camera, object_t **scene, FILE *file) {
         scene[numObjects++] = (object_t *) plane;
       }
     }
+
+    if (errorStatus != 0) {
+      fprintf(stdout, "Warning: Invalid object on line %d of CSV\n", lineNumber);
+    }
+
+    lineNumber += 1;
   }
 
   // Ensure that a camera was found
