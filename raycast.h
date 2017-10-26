@@ -13,7 +13,7 @@
 #define NO_INTERSECTION_FOUND -2
 
 // Numeric constants
-#define PPM_OUTPUT_VERSION 6
+#define PPM_OUTPUT_VERSION 3
 #define MAX_SCENE_OBJECTS 128
 #define FOCAL_LENGTH 1.0 // In world units
 
