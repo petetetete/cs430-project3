@@ -1,17 +1,21 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -c
+LFLAGS = -Wall -Wextra -lm
+
 all: raycast.o ppmrw.o vector.o parsing.o
-	gcc raycast.o ppmrw.o vector.o parsing.o -o raycast
+	$(CC) $(LFLAGS) raycast.o ppmrw.o vector.o parsing.o -o raycast
 
 raycast.o: raycast.c raycast.h
-	gcc -c raycast.c
+	$(CC) $(CFLAGS) raycast.c
 
 ppmrw.o: ppmrw.c ppmrw.h
-	gcc -c ppmrw.c
+	$(CC) $(CFLAGS) ppmrw.c
 
 vector.o: vector.c vector.h
-	gcc -c vector.c
+	$(CC) $(CFLAGS) vector.c
 
 parsing.o: parsing.c parsing.h
-	gcc -c parsing.c
+	$(CC) $(CFLAGS) parsing.c
 
 clean:
 	rm -rf *.o *.stackdump *.exe 2>/dev/null || true
