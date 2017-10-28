@@ -13,6 +13,9 @@
 #define OBJECT_KIND_SPHERE 3
 #define OBJECT_KIND_PLANE 4
 
+#define LIGHT_KIND_POINT 1
+#define LIGHT_KIND_SPOT 2
+
 // Error code constants
 #define INVALID_PARSE_LINE -4
 
@@ -47,18 +50,22 @@ struct sphere_t {
 struct plane_t {
   struct object_t;
   vector3_t diffuse_color;
+  vector3_t specular_color;
   vector3_t position;
   vector3_t normal;
 };
 
 struct light_t {
   struct object_t;
+  vector3_t position;
   vector3_t color;
   double theta;
   double radial_a2;
   double radial_a1;
   double radial_a0;
-  vector3_t position;
+  double angular_a0;
+  vector3_t direction;
+  int light_kind;
 };
 
 
