@@ -57,13 +57,32 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
   else return NO_INTERSECTION_FOUND;
 }
 
-vector3_t raycast(object_t **scene, vector3_t direction, int numObjects) {
+vector3_t calcualteShading(object_t *object) {
+
+  vector3_t color = vector3_create(0, 0, 0); // Replace with ambient light
+
+  // TODO: Replace with attenuation calculation
+  switch (object->kind) {
+    case OBJECT_KIND_SPHERE:
+      color = ((sphere_t *) object)->diffuse_color;
+      break;
+    case OBJECT_KIND_PLANE:
+      color = ((plane_t *) object)->diffuse_color;
+      break;
+  }
+
+  return color;
+}
+
+vector3_t raycast(vector3_t direction,
+                  object_t **scene, int numObjects,
+                  object_t **lights, int numLights) {
 
   // Track closet object
   object_t *closestObject = NULL; // Default to black
   double closestT = INFINITY;
 
-  // Iterate through all objects to find nearest color
+  // Iterate through all objects to find nearest object
   for (int i = 0; i < numObjects; i++) {
 
     // Current object and t value
@@ -87,26 +106,18 @@ vector3_t raycast(object_t **scene, vector3_t direction, int numObjects) {
     }
   }
 
-  if (closestObject != NULL) {
-    // TODO: Replace with attenuation calculation
-    switch (closestObject->kind) {
-      case OBJECT_KIND_SPHERE:
-        return ((sphere_t *) closestObject)->diffuse_color;
-        break;
-      case OBJECT_KIND_PLANE:
-        return ((plane_t *) closestObject)->diffuse_color;
-        break;
-    }
-    return NULL;
+  if (closestObject == NULL) {
+    return vector3_create(0, 0, 0); // Void color
   }
   else {
-    return vector3_create(0, 0, 0);
+    return calcualteShading(closestObject);
   }
 }
 
 // Actually creates and initializes the image
 int renderImage(ppm_t *ppmImage, camera_t *camera,
-                object_t **scene, int numObjects) {
+                object_t **scene, int numObjects,
+                object_t **lights, int numLights) {
 
   // Iterate over every pixel in the would be image
   double pixHeight = camera->height/ppmImage->height;
@@ -122,7 +133,9 @@ int renderImage(ppm_t *ppmImage, camera_t *camera,
       vector3_t direction = vector3_createUnit(xCoord, yCoord, -FOCAL_LENGTH);
 
       // Get color from raycast
-      vector3_t color = raycast(scene, direction, numObjects);
+      vector3_t color = raycast(direction,
+                                scene, numObjects,
+                                lights, numLights);
 
       // Populate pixel with color data
       ppmImage->pixels[i*ppmImage->width + j].r = (int) (color[0] * 255);
@@ -184,7 +197,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Create actual PPM image from scene
-  renderImage(ppmImage, camera, scene, numObjects[0]);
+  renderImage(ppmImage, camera, scene, numObjects[0], lights, numObjects[1]);
 
   // Clean up allocated memory
   free(camera);

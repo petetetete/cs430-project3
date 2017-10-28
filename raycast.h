@@ -46,16 +46,23 @@ double sphereIntersection(vector3_t direction, sphere_t* sphere);
  */
 double planeIntersection(vector3_t direction, plane_t* plane);
 
+
+vector3_t calcualteShading(object_t *object);
+
 /**
  * Casts a single ray given a particular scene and direction vector,
  * and returns the color of the closest object intersected.
  * 
- * @param  scene       array of objects describing the world
  * @param  direction   vector describing currently cast ray
+ * @param  scene       array of objects describing the world
  * @param  numObjects  number of objects in the world
+ * @param  lights      array of light objects in the world
+ * @param  numLights   number of lights in the world
  * @return             color vector of closest object intersected
  */
-vector3_t raycast(object_t **scene, vector3_t direction, int numObjects);
+vector3_t raycast(vector3_t direction,
+				  object_t **scene, int numObjects,
+				  object_t **lights, int numLights);
 
 /**
  * Renders a PPM image given a particular scene and camera position.
@@ -64,9 +71,12 @@ vector3_t raycast(object_t **scene, vector3_t direction, int numObjects);
  * @param  camera      the camera through which the scene is viewed
  * @param  scene       array of objects describing the world
  * @param  numObjects  number of objects in the world
+ * @param  lights      array of light objects in the world
+ * @param  numLights   number of lights in the world
  * @return             error status of image rendering
  */
 int renderImage(ppm_t *ppmImage, camera_t *camera,
-                object_t **scene, int numObjects);
+                object_t **scene, int numObjects,
+                object_t **lights, int numLights);
 
 #endif  // RAYCAST_H
