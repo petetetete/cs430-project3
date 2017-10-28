@@ -36,6 +36,43 @@ int parseCamera(camera_t *camera, char *line) {
   }
 }
 
+int parseLight(light_t *light, char *line) {
+
+  /*// Set object kind
+  light->kind = OBJECT_KIND_LIGHT;
+
+  // Variables to parse in to
+  double width;
+  double height;
+
+  // Try to find width and height elements in file
+  char *widthStart = strstr(line, "width:");
+  char *heightStart = strstr(line, "height:");
+
+  if (widthStart == NULL || heightStart == NULL) {
+    return INVALID_PARSE_LINE;
+  }
+
+  // Increment pointer beyond the initial scan string
+  sscanf(widthStart + 6, "%lf,", &width);
+  sscanf(heightStart + 7, "%lf,", &height);
+
+  // Catch invalid values
+  if (width == 0 || height == 0) {
+    return INVALID_PARSE_LINE;
+  }
+  else {
+
+    // Populate camera
+    camera->width = width;
+    camera->height = height;
+
+    return 0;
+  }*/
+
+  return 0;
+}
+
 int parseSphere(sphere_t *sphere, char *line) {
 
   sphere->kind = OBJECT_KIND_SPHERE;
@@ -133,13 +170,18 @@ int parsePlane(plane_t *plane, char *line) {
   }
 }
 
-// < 0 == error, but > 0 the return value is the number of objects
-int parseInput(camera_t *camera, object_t **scene, FILE *file) {
+// return NULL == error, otherwise return array of numObjects
+int *parseInput(camera_t *camera, object_t **scene,
+               object_t **lights, FILE *file) {
+
+  // Incrementers
+  int *numObjects = malloc(sizeof(int)*2);
+  numObjects[0] = 0;
+  numObjects[1] = 0;
+  int lineNumber = 1;
 
   int errorStatus = 0;
-  int numObjects = 0;
   int cameraFound = 1; // Default to false
-  int lineNumber = 1;
   char line[MAX_LINE_LENGTH];
 
   while (fgets(line, MAX_LINE_LENGTH, file)) {
@@ -157,13 +199,24 @@ int parseInput(camera_t *camera, object_t **scene, FILE *file) {
         cameraFound = 0;
       }
     }
+    else if (strcmp(objectType, "light") == 0) {
+      light_t *light = malloc(sizeof(light_t));
+      errorStatus = parseLight(light, line);
+
+      // If no error, save object
+      if (errorStatus == 0) {
+        lights[numObjects[1]++] = (object_t *) light;
+      }
+    }
+
+    // Handle scene objects
     else if (strcmp(objectType, "sphere") == 0) {
       sphere_t *sphere = malloc(sizeof(sphere_t));
       errorStatus = parseSphere(sphere, line);
 
       // If no error, save object
       if (errorStatus == 0) {
-        scene[numObjects++] = (object_t *) sphere;
+        scene[numObjects[0]++] = (object_t *) sphere;
       }
     }
     else if (strcmp(objectType, "plane") == 0) {
@@ -172,7 +225,7 @@ int parseInput(camera_t *camera, object_t **scene, FILE *file) {
 
       // If no error, save object
       if (errorStatus == 0) {
-        scene[numObjects++] = (object_t *) plane;
+        scene[numObjects[0]++] = (object_t *) plane;
       }
     }
 
@@ -185,7 +238,7 @@ int parseInput(camera_t *camera, object_t **scene, FILE *file) {
 
   // Ensure that a camera was found
   if (cameraFound != 0) {
-    return NO_CAMERA_FOUND;
+    return NULL;
   }
   else return numObjects;
 }

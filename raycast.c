@@ -60,7 +60,7 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
 vector3_t raycast(object_t **scene, vector3_t direction, int numObjects) {
 
   // Track closet object
-  vector3_t closestColor = vector3_create(0, 0, 0); // Default to black
+  object_t *closestObject = NULL; // Default to black
   double closestT = INFINITY;
 
   // Iterate through all objects to find nearest color
@@ -68,31 +68,40 @@ vector3_t raycast(object_t **scene, vector3_t direction, int numObjects) {
 
     // Current object and t value
     object_t *object = scene[i];
-    vector3_t diffuseColor;
     double t;
 
     // Determine which intersection type to check for
-    if (object->kind == OBJECT_KIND_SPHERE) {
-      sphere_t *sphere = (sphere_t *) object; // Convert to sphere
-      diffuseColor = sphere->diffuse_color;
-      t = sphereIntersection(direction, sphere);
+    switch (object->kind) {
+      case OBJECT_KIND_SPHERE:
+        t = sphereIntersection(direction, (sphere_t *) object);
+        break;
+      case OBJECT_KIND_PLANE:
+        t = planeIntersection(direction, (plane_t *) object);
+        break;
     }
-    else if (object->kind == OBJECT_KIND_PLANE) {
-      plane_t *plane = (plane_t *) object; // Convert to plane
-      diffuseColor = plane->diffuse_color;
-      t = planeIntersection(direction, plane);
-    }
-
-    // TODO: Add specular color calculation
 
     // If the current t was closer than all before, save the color
     if (t != NO_INTERSECTION_FOUND && t < closestT) {
       closestT = t;
-      closestColor = diffuseColor;
+      closestObject = object;
     }
   }
 
-  return closestColor;
+  if (closestObject != NULL) {
+    // TODO: Replace with attenuation calculation
+    switch (closestObject->kind) {
+      case OBJECT_KIND_SPHERE:
+        return ((sphere_t *) closestObject)->diffuse_color;
+        break;
+      case OBJECT_KIND_PLANE:
+        return ((plane_t *) closestObject)->diffuse_color;
+        break;
+    }
+    return NULL;
+  }
+  else {
+    return vector3_create(0, 0, 0);
+  }
 }
 
 // Actually creates and initializes the image
@@ -149,7 +158,8 @@ int main(int argc, char *argv[]) {
   FILE *outputFH;
   camera_t *camera = malloc(sizeof(camera_t));
   object_t **scene = malloc(sizeof(object_t) * MAX_SCENE_OBJECTS);
-  int numObjects;
+  object_t **lights = malloc(sizeof(object_t) * MAX_SCENE_LIGHTS);
+  int *numObjects;
 
   // Create final ppmImage
   ppm_t *ppmImage = malloc(sizeof(ppm_t));
@@ -165,16 +175,21 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse input csv into scene object
-  numObjects = parseInput(camera, scene, inputFH);
+  numObjects = parseInput(camera, scene, lights, inputFH);
 
   // Handle errors found in parseInput
-  if (numObjects < 0) {
+  if (numObjects == NULL) {
     fprintf(stderr, "Error: Malformed input CSV\n");
     return 1;
   }
 
   // Create actual PPM image from scene
-  renderImage(ppmImage, camera, scene, numObjects);
+  renderImage(ppmImage, camera, scene, numObjects[0]);
+
+  // Clean up allocated memory
+  free(camera);
+  free(scene);
+  free(lights);
 
   // Handle open errors on output file
   if (!(outputFH = fopen(outputFName, "w"))) {
@@ -185,7 +200,9 @@ int main(int argc, char *argv[]) {
   // Write final raycasted product to the designated PPM file
   writePPM(ppmImage, outputFH, PPM_OUTPUT_VERSION);
 
-  // Clean up program
+  // Final program clean up
+  free(ppmImage->pixels);
+  free(ppmImage);
   fclose(inputFH);
 
   return 0;

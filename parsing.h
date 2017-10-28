@@ -9,13 +9,12 @@
 
 // Define constants
 #define OBJECT_KIND_CAMERA 1
-#define OBJECT_KIND_SPHERE 2
-#define OBJECT_KIND_PLANE 3
-#define OBJECT_KIND_LIGHT 4
+#define OBJECT_KIND_LIGHT 2
+#define OBJECT_KIND_SPHERE 3
+#define OBJECT_KIND_PLANE 4
 
 // Error code constants
 #define INVALID_PARSE_LINE -4
-#define NO_CAMERA_FOUND -5
 
 // Numeric constants
 #define MAX_LINE_LENGTH 256
@@ -73,6 +72,15 @@ struct light_t {
 int parseCamera(camera_t *camera, char *line);
 
 /**
+ * Helper function used to parse light properties from string.
+ * 
+ * @param  camera  pointer to output light
+ * @param  line    string containing light data to parse
+ * @return         error status of parsing
+ */
+int parseLight(light_t *light, char *line);
+
+/**
  * Helper function used to parse sphere properties from string.
  * 
  * @param  sphere  pointer to output sphere
@@ -95,9 +103,12 @@ int parsePlane(plane_t *plane, char *line);
  * 
  * @param  camera  pointer to output camera
  * @param  scene   array of objects describing the world
+ * @param  lights  array of light objects in the world
  * @param  file    CSV file to parse for object data
- * @return         error status of parsing
+ * @return         number of objects tuple, [objects, lights]
+ *                 NULL is an error
  */
-int parseInput(camera_t *camera, object_t **scene, FILE *file);
+int *parseInput(camera_t *camera, object_t **scene,
+               object_t **lights, FILE *file);
 
 #endif  // PARSING_H
