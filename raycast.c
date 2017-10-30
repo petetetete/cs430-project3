@@ -46,8 +46,7 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
   }
   
   // Calculate the t scalar of intersection
-  vector3_t subVector = vector3_create(0, 0, 0);
-  vector3_sub(subVector, plane->position, direction);
+  vector3_t subVector = vector3_sub(plane->position, direction);
   double t = vector3_dot(subVector, plane->normal) / product;
 
   // Only return t when it is a positive scalar
@@ -57,18 +56,60 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
   else return NO_INTERSECTION_FOUND;
 }
 
-vector3_t calcualteShading(object_t *object) {
+vector3_t calculateShading(vector3_t direction, object_t *object, double t,
+                           object_t **scene, int numObjects,
+                           object_t **lights, int numLights) {
 
   vector3_t color = vector3_create(0, 0, 0); // Replace with ambient light
 
-  // TODO: Replace with attenuation calculation
-  switch (object->kind) {
-    case OBJECT_KIND_SPHERE:
-      color = ((sphere_t *) object)->diffuse_color;
-      break;
-    case OBJECT_KIND_PLANE:
-      color = ((plane_t *) object)->diffuse_color;
-      break;
+  // For each light in the world
+  for (int i = 0; i < numLights; i++) {
+
+    light_t *light = (light_t *) lights[i];
+
+    vector3_t intersection = vector3_scale(direction, t);
+    vector3_t lDirection = vector3_sub(light->position, intersection);
+
+    // Save closest shadow casting object
+    object_t *closestObject = NULL;
+    double closestT = INFINITY;
+
+    for (int j = 0; j < numObjects; j++) {
+      object_t *currentObject = scene[j];
+      double currentT;
+
+      if (currentObject == object) continue; // Skip checking the current object
+
+      switch (currentObject->kind) {
+        case OBJECT_KIND_SPHERE:
+          currentT = sphereIntersection(lDirection, (sphere_t *) currentObject);
+          break;
+        case OBJECT_KIND_PLANE:
+          currentT = planeIntersection(lDirection, (plane_t *) currentObject);
+          break;
+      }
+
+      // If the current t was closer than all before, save the color
+      if (currentT != NO_INTERSECTION_FOUND && currentT < closestT) {
+        closestT = currentT;
+        closestObject = currentObject;
+      }
+    }
+
+    if (closestT <= vector3_mag(lDirection) && closestObject != NULL) {
+      // calculate color
+
+      vector3_t normal = NULL;
+      switch (closestObject->kind) {
+        case OBJECT_KIND_SPHERE:
+          normal = vector3_sub(intersection,
+                               ((sphere_t *) closestObject)->position);
+          break;
+        case OBJECT_KIND_PLANE:
+          normal = ((plane_t *) closestObject)->normal;
+          break;
+      }
+    }
   }
 
   return color;
@@ -110,7 +151,9 @@ vector3_t raycast(vector3_t direction,
     return vector3_create(0, 0, 0); // Void color
   }
   else {
-    return calcualteShading(closestObject);
+    return calculateShading(direction, closestObject, closestT,
+                            scene, numObjects,
+                            lights, numLights);
   }
 }
 

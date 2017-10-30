@@ -47,7 +47,9 @@ double sphereIntersection(vector3_t direction, sphere_t* sphere);
 double planeIntersection(vector3_t direction, plane_t* plane);
 
 
-vector3_t calcualteShading(object_t *object);
+vector3_t calculateShading(vector3_t direction, object_t *object, double t,
+                           object_t **scene, int numObjects,
+                           object_t **lights, int numLights);
 
 /**
  * Casts a single ray given a particular scene and direction vector,
