@@ -1,60 +1,6 @@
 // Include header file
 #include "raycast.h"
 
-double sphereIntersection(vector3_t direction, sphere_t* sphere) {
-
-  vector3_t position = sphere->position;
-
-  // Calculate variables to use in quadratic formula
-  double b = -2*(position[0]*direction[0] +
-                 position[1]*direction[1] +
-                 position[2]*direction[2]);
-
-  double c = pow(position[0], 2) +
-             pow(position[1], 2) +
-             pow(position[2], 2) -
-             pow(sphere->radius, 2);
-
-  double discr = pow(b, 2) - 4*c;
-
-  if (discr < 0) {
-    return NO_INTERSECTION_FOUND;
-  }
-  else {
-
-    // Prioritize closest intersection
-    double t1 = (-b - sqrt(discr)) / 2;
-    if (t1 > 0) {
-      return t1;
-    }
-
-    double t2 = (-b + sqrt(discr)) / 2;
-    if (t2 > 0) {
-      return t2;
-    }
-
-    return NO_INTERSECTION_FOUND;
-  }
-}
-
-double planeIntersection(vector3_t direction, plane_t* plane) {
-
-  // No intersections if the vector is parallel to the plane
-  double product = vector3_dot(direction, plane->normal);
-  if (product == 0) {
-    return NO_INTERSECTION_FOUND;
-  }
-  
-  // Calculate the t scalar of intersection
-  vector3_t subVector = vector3_sub(plane->position, direction);
-  double t = vector3_dot(subVector, plane->normal) / product;
-
-  // Only return t when it is a positive scalar
-  if (t > 0) {
-    return t;
-  }
-  else return NO_INTERSECTION_FOUND;
-}
 
 vector3_t calculateShading(vector3_t direction, object_t *object, double t,
                            object_t **scene, int numObjects,
@@ -69,9 +15,10 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
 
     vector3_t intersection = vector3_scale(direction, t);
     vector3_t lDirection = vector3_sub(light->position, intersection);
+    double lDistance = vector3_mag(lDirection);
 
     // Save closest shadow casting object
-    object_t *closestObject = NULL;
+    //object_t *closestObject = NULL;
     double closestT = INFINITY;
 
     for (int j = 0; j < numObjects; j++) {
@@ -89,31 +36,43 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
           break;
       }
 
-      // If the current t was closer than all before, save the color
+      // If the current t was closer than all before, save it
       if (currentT != NO_INTERSECTION_FOUND && currentT < closestT) {
         closestT = currentT;
-        closestObject = currentObject;
+        //closestObject = currentObject;
       }
     }
 
-    if (closestT <= vector3_mag(lDirection) && closestObject != NULL) {
-      // calculate color
+    // closestT > lDistance && closestObject == NULL
+    printf("%.3f %.3f\n", closestT, lDistance);
+    if (1) {
 
-      vector3_t normal = NULL;
-      switch (closestObject->kind) {
-        case OBJECT_KIND_SPHERE:
-          normal = vector3_sub(intersection,
-                               ((sphere_t *) closestObject)->position);
-          break;
-        case OBJECT_KIND_PLANE:
-          normal = ((plane_t *) closestObject)->normal;
-          break;
+      // Calculate color
+      double frad = radialAttenuation(light, lDistance);
+      double fang = angularAttenuation(light, lDirection);
+      
+      if (object->kind == OBJECT_KIND_SPHERE) {
+        sphere_t *sphere = (sphere_t *) object;
+        color[0] += frad * fang * (sphere->diffuse_color[0] + sphere->specular_color[0]);
+        color[1] += frad * fang * (sphere->diffuse_color[1] + sphere->specular_color[1]);
+        color[2] += frad * fang * (sphere->diffuse_color[2] + sphere->specular_color[2]);
+      }
+      else if (object->kind == OBJECT_KIND_PLANE) {
+        plane_t *plane = (plane_t *) object;
+        color[0] += frad * fang * (plane->diffuse_color[0] + plane->specular_color[0]);
+        color[1] += frad * fang * (plane->diffuse_color[1] + plane->specular_color[1]);
+        color[2] += frad * fang * (plane->diffuse_color[2] + plane->specular_color[2]);
       }
     }
   }
 
+  color[0] = color[0] > 1 ? 1 : color[0] < 0 ? 0 : color[0];
+  color[1] = color[1] > 1 ? 1 : color[1] < 0 ? 0 : color[1];
+  color[2] = color[2] > 1 ? 1 : color[2] < 0 ? 0 : color[2];
+
   return color;
 }
+
 
 vector3_t raycast(vector3_t direction,
                   object_t **scene, int numObjects,
@@ -151,11 +110,20 @@ vector3_t raycast(vector3_t direction,
     return vector3_create(0, 0, 0); // Void color
   }
   else {
+
+    /*switch (closestObject->kind) {
+      case OBJECT_KIND_SPHERE:
+        return ((sphere_t *) closestObject)->diffuse_color;
+      case OBJECT_KIND_PLANE:
+        return ((plane_t *) closestObject)->diffuse_color;
+    }*/
+
     return calculateShading(direction, closestObject, closestT,
                             scene, numObjects,
                             lights, numLights);
   }
 }
+
 
 // Actually creates and initializes the image
 int renderImage(ppm_t *ppmImage, camera_t *camera,
@@ -189,6 +157,7 @@ int renderImage(ppm_t *ppmImage, camera_t *camera,
 
   return 0; // No errors!
 }
+
 
 int main(int argc, char *argv[]) {
 

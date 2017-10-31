@@ -1,6 +1,7 @@
 // Include header file
 #include "parsing.h"
 
+
 int parseCamera(camera_t *camera, char *line) {
 
   // Set object kind
@@ -35,6 +36,7 @@ int parseCamera(camera_t *camera, char *line) {
     return 0;
   }
 }
+
 
 int parseLight(light_t *light, char *line) {
 
@@ -153,6 +155,7 @@ int parseLight(light_t *light, char *line) {
   }
 }
 
+
 int parseSphere(sphere_t *sphere, char *line) {
 
   sphere->kind = OBJECT_KIND_SPHERE;
@@ -207,6 +210,7 @@ int parseSphere(sphere_t *sphere, char *line) {
     return 0;
   }
 }
+
 
 int parsePlane(plane_t *plane, char *line) {
 
@@ -264,6 +268,7 @@ int parsePlane(plane_t *plane, char *line) {
     return 0;
   }
 }
+
 
 // return NULL == error, otherwise return array of numObjects
 int *parseInput(camera_t *camera, object_t **scene,

@@ -1,6 +1,7 @@
 // Include header file
 #include "ppmrw.h"
 
+
 int getNextString(char *output, FILE *file) {
 
   output[0] = 0; // Initialize input
@@ -46,6 +47,7 @@ int getNextString(char *output, FILE *file) {
     return 0;
   }
 }
+
 
 int readPPM(ppm_t *output, FILE *file) {
 
@@ -121,6 +123,7 @@ int readPPM(ppm_t *output, FILE *file) {
 
   return 0;
 }
+
 
 int writePPM(ppm_t *image, FILE *file, int newFormat) {
 

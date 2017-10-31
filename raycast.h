@@ -8,9 +8,7 @@
 #include "ppmrw.h"
 #include "vector.h"
 #include "parsing.h"
-
-// Error code constants
-#define NO_INTERSECTION_FOUND -2
+#include "helpers.h"
 
 // Numeric constants
 #define PPM_OUTPUT_VERSION 3
@@ -25,26 +23,6 @@ Usage: raycast width height input_file output.ppm\n\
   height: pixel height of the view plane\n\
   input_file: csv file of scene objects\n\
   output_file: final out PPM file name\n"
-
-/**
- * Returns scalar t value of intersection between a direction
- * vector and a sphere, described by a origin point, and a radius.
- * 
- * @param  direction  the vector to check for intersection
- * @param  sphere     the sphere that may be intersected
- * @return            scalar value to apply to vector to find intersection
- */
-double sphereIntersection(vector3_t direction, sphere_t* sphere);
-
-/**
- * Returns scalar t value of intersection between a direction
- * vector and a plane, described by its origin and normal vector.
- * 
- * @param  direction  the vector to check for intersection
- * @param  plane      the plane that may be intersected
- * @return            scalar value to apply to vector to find intersection
- */
-double planeIntersection(vector3_t direction, plane_t* plane);
 
 
 vector3_t calculateShading(vector3_t direction, object_t *object, double t,

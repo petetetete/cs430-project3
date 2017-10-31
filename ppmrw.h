@@ -29,6 +29,7 @@ struct ppm_t {
   pixel_t* pixels;
 };
 
+
 /**
  * Helper method used to get the next series of ASCII 
  * characters from a file handle while ignoring leading whitespace

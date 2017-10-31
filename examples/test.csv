@@ -1,0 +1,4 @@
+camera, width: 0.5, height: 0.5
+sphere, diffuse_color: [0.1, 0.5, 0.2], specular_color: [0, 0, 0], position: [ 2,6, -60 ], radius: 8
+plane, diffuse_color: [ 0.6, 0.5,0.2], specular_color: [0, 0, 0], position: [0,0, -68], normal: [0, 4, 1]
+light, color: [ 2, 2,2], theta: 0, radial-a2: 0.0125, radial-a1: 0, radial-a0: 0, position: [0,-10, -50]
