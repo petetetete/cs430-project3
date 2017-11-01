@@ -2,78 +2,7 @@
 #include "raycast.h"
 
 
-vector3_t calculateShading(vector3_t direction, object_t *object, double t,
-                           object_t **scene, int numObjects,
-                           object_t **lights, int numLights) {
-
-  vector3_t color = vector3_create(0, 0, 0); // Replace with ambient light
-
-  // For each light in the world
-  for (int i = 0; i < numLights; i++) {
-
-    light_t *light = (light_t *) lights[i];
-
-    vector3_t intersection = vector3_scale(direction, t);
-    vector3_t lDirection = vector3_sub(light->position, intersection);
-    double lDistance = vector3_mag(lDirection);
-
-   /* // Save closest shadow casting object
-    //object_t *closestObject = NULL;
-    double closestT = INFINITY;
-
-    for (int j = 0; j < numObjects; j++) {
-      object_t *currentObject = scene[j];
-      double currentT;
-
-      if (currentObject == object) continue; // Skip checking the current object
-
-      switch (currentObject->kind) {
-        case OBJECT_KIND_SPHERE:
-          currentT = sphereIntersect(lDirection, (sphere_t *) currentObject);
-          break;
-        case OBJECT_KIND_PLANE:
-          currentT = planeIntersect(lDirection, (plane_t *) currentObject);
-          break;
-      }
-
-      // If the current t was closer than all before, save it
-      if (currentT != NO_INTERSECTION_FOUND && currentT < closestT) {
-        closestT = currentT;
-        //closestObject = currentObject;
-      }
-    }*/
-
-    // closestT > lDistance && closestObject == NULL
-    if (1) {
-
-      // Calculate color
-      double frad = radialAttenuation(light, lDistance);
-      double fang = angularAttenuation(light, lDirection);
-      
-      if (object->kind == OBJECT_KIND_SPHERE) {
-        sphere_t *sphere = (sphere_t *) object;
-        color[0] += frad * fang * (sphere->diffuse_color[0] + sphere->specular_color[0]);
-        color[1] += frad * fang * (sphere->diffuse_color[1] + sphere->specular_color[1]);
-        color[2] += frad * fang * (sphere->diffuse_color[2] + sphere->specular_color[2]);
-      }
-      else if (object->kind == OBJECT_KIND_PLANE) {
-        plane_t *plane = (plane_t *) object;
-        color[0] += frad * fang * (plane->diffuse_color[0] + plane->specular_color[0]);
-        color[1] += frad * fang * (plane->diffuse_color[1] + plane->specular_color[1]);
-        color[2] += frad * fang * (plane->diffuse_color[2] + plane->specular_color[2]);
-      }
-    }
-  }
-
-  color[0] = clampValue(color[0], 0.0, 1.0);
-  color[1] = clampValue(color[1], 0.0, 1.0);
-  color[2] = clampValue(color[2], 0.0, 1.0);
-
-  return color;
-}
-
-
-double rayObjectIntersect(object_t **outObject,
+double rayObjectIntersect(object_t **outObject, object_t *skipObject,
                           vector3_t origin, vector3_t direction,
                           object_t **scene, int numObjects) {
 
@@ -89,6 +18,10 @@ double rayObjectIntersect(object_t **outObject,
 
     // Current object
     currObject = scene[i];
+
+    if (skipObject != NULL && currObject == skipObject) {
+      continue;
+    }
 
     // Determine which intersection type to check for
     switch (currObject->kind) {
@@ -112,7 +45,8 @@ double rayObjectIntersect(object_t **outObject,
     return NO_INTERSECTION_FOUND;
   }
   else {
-    *outObject = closestObject;
+    if (outObject != NULL)
+      *outObject = closestObject;
     return closestT;
   }
 }
@@ -123,7 +57,8 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
                   object_t **lights, int numLights) {
 
   object_t *object;
-  double t = rayObjectIntersect(&object, origin, direction, scene, numObjects);
+  double t = rayObjectIntersect(&object, NULL,
+                                origin, direction, scene, numObjects);
 
   // If we did not hit any objects, the pixel is in the void
   if (t == NO_INTERSECTION_FOUND) {
@@ -131,17 +66,64 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
   }
   else {
 
-    /* TODO: remove
-    switch (closestObject->kind) {
-      case OBJECT_KIND_SPHERE:
-        return ((sphere_t *) closestObject)->diffuse_color;
-      case OBJECT_KIND_PLANE:
-        return ((plane_t *) closestObject)->diffuse_color;
-    }*/
+    // Calculate Shading
 
-    vector3_t color = calculateShading(direction, object, t,
-                                       scene, numObjects,
-                                       lights, numLights);
+    vector3_t color = vector3_create(0, 0, 0); // TODO: Add ambient light
+    vector3_t tempColor;
+
+    // For each light in the world
+    for (int i = 0; i < numLights; i++) {
+
+      light_t *light = (light_t *) lights[i];
+
+      // Calculate light 
+      vector3_t lIntersect= vector3_add(vector3_scale(direction, t), origin);
+      vector3_t lDirection = vector3_sub(light->position, lIntersect);
+      double lDistance = vector3_mag(lDirection);
+
+      // Normalize light direction vector
+      lDirection = vector3_normalize(lDirection);
+
+      double shadowObjectT = rayObjectIntersect(NULL, object, lIntersect,
+                                                lDirection, scene, numObjects);
+
+      // Only color the object if there isn't an object any closer
+      if (shadowObjectT == NO_INTERSECTION_FOUND || shadowObjectT > lDistance) {
+
+        // Calculate color
+        double frad = radialAttenuation(light, lDistance);
+        double fang = angularAttenuation(light, lDirection);
+        vector3_t diff;
+        vector3_t spec;
+        
+        if (object->kind == OBJECT_KIND_SPHERE) {
+          sphere_t *sphere = (sphere_t *) object;
+          vector3_t normal = vector3_sub(lIntersect, sphere->position);
+          diff = diffuseReflection(sphere->diffuse_color, light->color,
+                                   normal, lDirection);
+          spec = specularReflection(sphere->specular_color, light->color,
+                                    direction, NULL, 20); // TODO: Calculate reflection and add here
+        }
+        else if (object->kind == OBJECT_KIND_PLANE) {
+          plane_t *plane = (plane_t *) object;
+          diff = diffuseReflection(plane->diffuse_color, light->color,
+                                   plane->normal, lDirection);
+          spec = specularReflection(plane->specular_color, light->color,
+                                    direction, NULL, 20);
+        }
+
+        tempColor = vector3_scale(vector3_add(diff, spec), frad * fang);
+        color[0] += tempColor[0];
+        color[1] += tempColor[1];
+        color[2] += tempColor[2];
+      }
+    }
+
+    // Clamp final color values
+    color[0] = clampValue(color[0], 0.0, 1.0);
+    color[1] = clampValue(color[1], 0.0, 1.0);
+    color[2] = clampValue(color[2], 0.0, 1.0);
+
     return color;
   }
 }

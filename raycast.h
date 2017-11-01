@@ -25,11 +25,7 @@ Usage: raycast width height input_file output.ppm\n\
   output_file: final out PPM file name\n"
 
 
-vector3_t calculateShading(vector3_t direction, object_t *object, double t,
-                           object_t **scene, int numObjects,
-                           object_t **lights, int numLights);
-
-double rayObjectIntersect(object_t **outObject,
+double rayObjectIntersect(object_t **outObject, object_t *skipObject,
                           vector3_t origin, vector3_t direction,
                           object_t **scene, int numObjects);
 

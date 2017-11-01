@@ -30,6 +30,40 @@ double angularAttenuation(light_t *light, vector3_t objDirection) {
 }
 
 
+vector3_t diffuseReflection(vector3_t objColor, vector3_t lightColor,
+                            vector3_t normal, vector3_t lDirection) {
+
+  return objColor;
+  
+  /*vector3_t output = vector3_create(0, 0, 0);
+  double product = vector3_dot(normal, lDirection) * M_PI/180;
+  if (product > 0) {
+    printf("%.3f\n", product);
+    output[0] = objColor[0]*lightColor[0]*product;
+    output[1] = objColor[1]*lightColor[1]*product;
+    output[2] = objColor[2]*lightColor[2]*product;
+  }
+
+  return output;*/
+}
+
+vector3_t specularReflection(vector3_t objColor, vector3_t lightColor,
+                             vector3_t direction, vector3_t reflection,
+                             double shininess) {
+
+  return objColor;
+  /*vector3_t output = vector3_create(0, 0, 0);
+  double product = vector3_dot(normal, lDirection);
+  if (product > 0) {
+    output[0] = objColor[0]*lightColor[0]*product;
+    output[1] = objColor[1]*lightColor[1]*product;
+    output[2] = objColor[2]*lightColor[2]*product;
+  }
+
+  return output;*/
+}
+
+
 double clampValue(double value, double min, double max) {
   if (value > max) {
     return max;

@@ -40,6 +40,11 @@ double vector3_mag(vector3_t a) {
 }
 
 
+vector3_t vector3_normalize(vector3_t a) {
+  return vector3_scale(a, 1 / vector3_mag(a));
+}
+
+
 vector3_t vector3_create(double a, double b, double c) {
   vector3_t output = malloc(sizeof(double) * 3);
   output[0] = a;

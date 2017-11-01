@@ -62,6 +62,8 @@ vector3_t vector3_cross(vector3_t a, vector3_t b);
  */
 double vector3_mag(vector3_t a);
 
+vector3_t vector3_normalize(vector3_t a);
+
 /**
  * Create a new vector.
  * 
