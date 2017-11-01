@@ -19,6 +19,8 @@ double radialAttenuation(light_t *light, double distance);
 
 double angularAttenuation(light_t *light, vector3_t objDirection);
 
+double clampValue(double value, double min, double max);
+
 /**
  * Returns scalar t value of intersection between a direction
  * vector and a sphere, described by a origin point, and a radius.

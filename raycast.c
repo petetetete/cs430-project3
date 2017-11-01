@@ -44,7 +44,6 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
     }
 
     // closestT > lDistance && closestObject == NULL
-    printf("%.3f %.3f\n", closestT, lDistance);
     if (1) {
 
       // Calculate color
@@ -66,61 +65,84 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
     }
   }
 
-  color[0] = color[0] > 1 ? 1 : color[0] < 0 ? 0 : color[0];
-  color[1] = color[1] > 1 ? 1 : color[1] < 0 ? 0 : color[1];
-  color[2] = color[2] > 1 ? 1 : color[2] < 0 ? 0 : color[2];
+  color[0] = clampValue(color[0], 0.0, 1.0);
+  color[1] = clampValue(color[1], 0.0, 1.0);
+  color[2] = clampValue(color[2], 0.0, 1.0);
 
   return color;
 }
 
 
-vector3_t raycast(vector3_t direction,
-                  object_t **scene, int numObjects,
-                  object_t **lights, int numLights) {
+double rayObjectIntersect(object_t **outObject,
+                          vector3_t origin, vector3_t direction,
+                          object_t **scene, int numObjects) {
 
   // Track closet object
-  object_t *closestObject = NULL; // Default to black
+  object_t *closestObject = NULL;
   double closestT = INFINITY;
+
+  object_t *currObject = NULL;
+  double currT;
 
   // Iterate through all objects to find nearest object
   for (int i = 0; i < numObjects; i++) {
 
-    // Current object and t value
-    object_t *object = scene[i];
-    double t;
+    // Current object
+    currObject = scene[i];
 
     // Determine which intersection type to check for
-    switch (object->kind) {
+    switch (currObject->kind) {
       case OBJECT_KIND_SPHERE:
-        t = sphereIntersection(direction, (sphere_t *) object);
+        currT = sphereIntersection(direction, (sphere_t *) currObject);
         break;
       case OBJECT_KIND_PLANE:
-        t = planeIntersection(direction, (plane_t *) object);
+        currT = planeIntersection(direction, (plane_t *) currObject);
         break;
     }
 
     // If the current t was closer than all before, save the color
-    if (t != NO_INTERSECTION_FOUND && t < closestT) {
-      closestT = t;
-      closestObject = object;
+    if (currT != NO_INTERSECTION_FOUND && currT < closestT) {
+      closestT = currT;
+      closestObject = currObject;
     }
   }
 
   if (closestObject == NULL) {
+    outObject = NULL;
+    return NO_INTERSECTION_FOUND;
+  }
+  else {
+    *outObject = closestObject;
+    return closestT;
+  }
+}
+
+
+vector3_t raycast(vector3_t origin, vector3_t direction,
+                  object_t **scene, int numObjects,
+                  object_t **lights, int numLights) {
+
+  object_t *object;
+  double t = rayObjectIntersect(&object, origin, direction, scene, numObjects);
+
+  // If we did not hit any objects, the pixel is in the void
+  if (t == NO_INTERSECTION_FOUND) {
     return vector3_create(0, 0, 0); // Void color
   }
   else {
 
-    /*switch (closestObject->kind) {
+    /* TODO: remove
+    switch (closestObject->kind) {
       case OBJECT_KIND_SPHERE:
         return ((sphere_t *) closestObject)->diffuse_color;
       case OBJECT_KIND_PLANE:
         return ((plane_t *) closestObject)->diffuse_color;
     }*/
 
-    return calculateShading(direction, closestObject, closestT,
-                            scene, numObjects,
-                            lights, numLights);
+    vector3_t color = calculateShading(direction, object, t,
+                                       scene, numObjects,
+                                       lights, numLights);
+    return color;
   }
 }
 
@@ -144,7 +166,7 @@ int renderImage(ppm_t *ppmImage, camera_t *camera,
       vector3_t direction = vector3_createUnit(xCoord, yCoord, -FOCAL_LENGTH);
 
       // Get color from raycast
-      vector3_t color = raycast(direction,
+      vector3_t color = raycast(camera->position, direction,
                                 scene, numObjects,
                                 lights, numLights);
 

@@ -37,6 +37,7 @@ struct camera_t {
   struct object_t;
   double width;
   double height;
+  vector3_t position;
 };
 
 struct sphere_t {

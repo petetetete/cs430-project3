@@ -30,6 +30,17 @@ double angularAttenuation(light_t *light, vector3_t objDirection) {
 }
 
 
+double clampValue(double value, double min, double max) {
+  if (value > max) {
+    return max;
+  } else if (value < min) {
+    return min;
+  } else {
+    return value;
+  }
+}
+
+
 double sphereIntersection(vector3_t direction, sphere_t* sphere) {
 
   vector3_t position = sphere->position;

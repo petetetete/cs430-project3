@@ -32,6 +32,7 @@ int parseCamera(camera_t *camera, char *line) {
     // Populate camera
     camera->width = width;
     camera->height = height;
+    camera->position = vector3_create(0, 0, 0);
 
     return 0;
   }

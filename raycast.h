@@ -29,10 +29,15 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
                            object_t **scene, int numObjects,
                            object_t **lights, int numLights);
 
+double rayObjectIntersect(object_t **outObject,
+                          vector3_t origin, vector3_t direction,
+                          object_t **scene, int numObjects);
+
 /**
  * Casts a single ray given a particular scene and direction vector,
  * and returns the color of the closest object intersected.
  * 
+ * @param  origin      point at which the ray is being sent from
  * @param  direction   vector describing currently cast ray
  * @param  scene       array of objects describing the world
  * @param  numObjects  number of objects in the world
@@ -40,7 +45,7 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
  * @param  numLights   number of lights in the world
  * @return             color vector of closest object intersected
  */
-vector3_t raycast(vector3_t direction,
+vector3_t raycast(vector3_t origin, vector3_t direction,
 				  object_t **scene, int numObjects,
 				  object_t **lights, int numLights);
 
