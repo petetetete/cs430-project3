@@ -15,6 +15,7 @@ double radialAttenuation(light_t *light, double distance) {
 
 
 double angularAttenuation(light_t *light, vector3_t objDirection) {
+
   if (light->light_kind != LIGHT_KIND_SPOT) {
     return 1.0;
   }
@@ -34,7 +35,7 @@ vector3_t diffuseReflection(vector3_t objColor, vector3_t lightColor,
                             vector3_t normal, vector3_t lDirection) {
 
   return objColor;
-  
+
   /*vector3_t output = vector3_create(0, 0, 0);
   double product = vector3_dot(normal, lDirection) * M_PI/180;
   if (product > 0) {

@@ -78,7 +78,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
 
       // Calculate light 
       vector3_t lIntersect= vector3_add(vector3_scale(direction, t), origin);
-      vector3_t lDirection = vector3_sub(light->position, lIntersect);
+      vector3_t lDirection = vector3_sub(lIntersect, light->position);
       double lDistance = vector3_mag(lDirection);
 
       // Normalize light direction vector
