@@ -17,7 +17,7 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
     vector3_t lDirection = vector3_sub(light->position, intersection);
     double lDistance = vector3_mag(lDirection);
 
-    // Save closest shadow casting object
+   /* // Save closest shadow casting object
     //object_t *closestObject = NULL;
     double closestT = INFINITY;
 
@@ -29,10 +29,10 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
 
       switch (currentObject->kind) {
         case OBJECT_KIND_SPHERE:
-          currentT = sphereIntersection(lDirection, (sphere_t *) currentObject);
+          currentT = sphereIntersect(lDirection, (sphere_t *) currentObject);
           break;
         case OBJECT_KIND_PLANE:
-          currentT = planeIntersection(lDirection, (plane_t *) currentObject);
+          currentT = planeIntersect(lDirection, (plane_t *) currentObject);
           break;
       }
 
@@ -41,7 +41,7 @@ vector3_t calculateShading(vector3_t direction, object_t *object, double t,
         closestT = currentT;
         //closestObject = currentObject;
       }
-    }
+    }*/
 
     // closestT > lDistance && closestObject == NULL
     if (1) {
@@ -93,10 +93,10 @@ double rayObjectIntersect(object_t **outObject,
     // Determine which intersection type to check for
     switch (currObject->kind) {
       case OBJECT_KIND_SPHERE:
-        currT = sphereIntersection(direction, (sphere_t *) currObject);
+        currT = sphereIntersect(origin, direction, (sphere_t *) currObject);
         break;
       case OBJECT_KIND_PLANE:
-        currT = planeIntersection(direction, (plane_t *) currObject);
+        currT = planeIntersect(origin, direction, (plane_t *) currObject);
         break;
     }
 

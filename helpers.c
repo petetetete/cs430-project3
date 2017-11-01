@@ -41,21 +41,32 @@ double clampValue(double value, double min, double max) {
 }
 
 
-double sphereIntersection(vector3_t direction, sphere_t* sphere) {
+double sphereIntersect(vector3_t origin, vector3_t direction,
+                       sphere_t *sphere) {
 
   vector3_t position = sphere->position;
 
   // Calculate variables to use in quadratic formula
-  double b = -2*(position[0]*direction[0] +
-                 position[1]*direction[1] +
-                 position[2]*direction[2]);
+  double a = pow(direction[0], 2) +
+             pow(direction[1], 2) +
+             pow(direction[2], 2);
+
+  double b = 2*(direction[0]*(origin[0] - position[0]) +
+                direction[1]*(origin[1] - position[1]) +
+                direction[2]*(origin[2] - position[2]));
 
   double c = pow(position[0], 2) +
              pow(position[1], 2) +
-             pow(position[2], 2) -
+             pow(position[2], 2) +
+             pow(origin[0], 2) +
+             pow(origin[1], 2) +
+             pow(origin[2], 2) +
+             -2*(position[0]*origin[0] +
+                 position[1]*origin[1] +
+                 position[2]*origin[2]) -
              pow(sphere->radius, 2);
 
-  double discr = pow(b, 2) - 4*c;
+  double discr = pow(b, 2) - 4*a*c;
 
   if (discr < 0) {
     return NO_INTERSECTION_FOUND;
@@ -63,12 +74,12 @@ double sphereIntersection(vector3_t direction, sphere_t* sphere) {
   else {
 
     // Prioritize closest intersection
-    double t1 = (-b - sqrt(discr)) / 2;
+    double t1 = (-b - sqrt(discr)) / (2*a);
     if (t1 > 0) {
       return t1;
     }
 
-    double t2 = (-b + sqrt(discr)) / 2;
+    double t2 = (-b + sqrt(discr)) / (2*a);
     if (t2 > 0) {
       return t2;
     }
@@ -78,7 +89,7 @@ double sphereIntersection(vector3_t direction, sphere_t* sphere) {
 }
 
 
-double planeIntersection(vector3_t direction, plane_t* plane) {
+double planeIntersect(vector3_t origin, vector3_t direction, plane_t* plane) {
 
   // No intersections if the vector is parallel to the plane
   double product = vector3_dot(direction, plane->normal);
@@ -87,7 +98,7 @@ double planeIntersection(vector3_t direction, plane_t* plane) {
   }
   
   // Calculate the t scalar of intersection
-  vector3_t subVector = vector3_sub(plane->position, direction);
+  vector3_t subVector = vector3_sub(plane->position, origin);
   double t = vector3_dot(subVector, plane->normal) / product;
 
   // Only return t when it is a positive scalar

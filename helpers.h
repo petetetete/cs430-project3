@@ -25,20 +25,22 @@ double clampValue(double value, double min, double max);
  * Returns scalar t value of intersection between a direction
  * vector and a sphere, described by a origin point, and a radius.
  * 
+ * @param  origin     the origin point of the vector
  * @param  direction  the vector to check for intersection
  * @param  sphere     the sphere that may be intersected
  * @return            scalar value to apply to vector to find intersection
  */
-double sphereIntersection(vector3_t direction, sphere_t* sphere);
+double sphereIntersect(vector3_t origin, vector3_t direction, sphere_t *sphere);
 
 /**
  * Returns scalar t value of intersection between a direction
  * vector and a plane, described by its origin and normal vector.
  * 
+ * @param  origin     the origin point of the vector
  * @param  direction  the vector to check for intersection
  * @param  plane      the plane that may be intersected
  * @return            scalar value to apply to vector to find intersection
  */
-double planeIntersection(vector3_t direction, plane_t* plane);
+double planeIntersect(vector3_t origin, vector3_t direction, plane_t *plane);
 
 #endif  // HELPERS_H

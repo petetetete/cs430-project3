@@ -8,10 +8,12 @@ int parseCamera(camera_t *camera, char *line) {
   camera->kind = OBJECT_KIND_CAMERA;
 
   // Variables to parse in to
+  vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY); // Shared
   double width = 0;
   double height = 0;
 
   // Try to find width and height elements in file
+  char *positionStart = strstr(line, "position:");
   char *widthStart = strstr(line, "width:");
   char *heightStart = strstr(line, "height:");
 
@@ -20,6 +22,10 @@ int parseCamera(camera_t *camera, char *line) {
   }
 
   // Increment pointer beyond the initial scan string
+  if (positionStart != NULL) {
+    sscanf(positionStart + 9, " [%lf , %lf , %lf],",
+           &position[0], &position[1], &position[2]);
+  }
   sscanf(widthStart + 6, "%lf,", &width);
   sscanf(heightStart + 7, "%lf,", &height);
 
@@ -32,7 +38,15 @@ int parseCamera(camera_t *camera, char *line) {
     // Populate camera
     camera->width = width;
     camera->height = height;
-    camera->position = vector3_create(0, 0, 0);
+
+    if (position[0] != INFINITY &&
+        position[1] != INFINITY &&
+        position[2] != INFINITY) {
+      camera->position = position;
+    }
+    else {
+      camera->position = vector3_create(0, 0, 0);
+    }
 
     return 0;
   }
@@ -71,9 +85,9 @@ int parseLight(light_t *light, char *line) {
 
   // Save global light properties
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
-    &position[0], &position[1], &position[2]);
+         &position[0], &position[1], &position[2]);
   sscanf(colorStart + 6, " [%lf , %lf , %lf],",
-    &color[0], &color[1], &color[2]);
+         &color[0], &color[1], &color[2]);
 
   // Bail out early if the global light properties are bad
   if (position[0] == INFINITY ||
@@ -133,7 +147,7 @@ int parseLight(light_t *light, char *line) {
     // Get spot light properties
     sscanf(angularA0Start + 11, "%lf,", &angularA0);
     sscanf(directionStart + 10, " [%lf , %lf , %lf],",
-      &direction[0], &direction[1], &direction[2]);
+           &direction[0], &direction[1], &direction[2]);
 
     // Catch invalid values
     if (angularA0 == INFINITY ||
@@ -180,11 +194,11 @@ int parseSphere(sphere_t *sphere, char *line) {
 
   // Increment pointer beyond the initial scan string
   sscanf(diffuseColorStart + 14, " [%lf , %lf , %lf],",
-    &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
+         &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
   sscanf(specularColorStart + 15, " [%lf , %lf , %lf],",
-    &specularColor[0], &specularColor[1], &specularColor[2]);
+         &specularColor[0], &specularColor[1], &specularColor[2]);
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
-    &position[0], &position[1], &position[2]);
+         &position[0], &position[1], &position[2]);
   sscanf(radiusStart + 7, "%lf,", &radius);
 
   // Catch invalid values
@@ -235,13 +249,13 @@ int parsePlane(plane_t *plane, char *line) {
 
   // Increment pointer beyond the initial scan string
   sscanf(diffuseColorStart + 14, " [%lf , %lf , %lf],",
-    &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
+         &diffuseColor[0], &diffuseColor[1], &diffuseColor[2]);
   sscanf(specularColorStart + 15, " [%lf , %lf , %lf],",
-    &specularColor[0], &specularColor[1], &specularColor[2]);
+         &specularColor[0], &specularColor[1], &specularColor[2]);
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
-    &position[0], &position[1], &position[2]);
+         &position[0], &position[1], &position[2]);
   sscanf(normalStart + 7, " [%lf , %lf , %lf],",
-    &normal[0], &normal[1], &normal[2]);
+         &normal[0], &normal[1], &normal[2]);
 
   // Catch invalid values
   if (diffuseColor[0] == INFINITY ||
