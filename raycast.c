@@ -40,6 +40,8 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
     }
   }
 
+
+
   if (closestObject == NULL) {
     outObject = NULL;
     return NO_INTERSECTION_FOUND;
@@ -69,53 +71,70 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     // Calculate Shading
 
     vector3_t color = vector3_create(0, 0, 0); // TODO: Add ambient light
-    vector3_t tempColor;
+    vector3_t tempVector = vector3_create(0, 0, 0); // For calculations
+
+    // Declare variables all only once
+    light_t *light;
+    vector3_t lIntersect = vector3_create(0, 0, 0);
+    vector3_t lDirection = vector3_create(0, 0, 0);
+    double lDistance;
+    double shadowObjectT;
+
+    double frad;
+    double fang;
+    vector3_t diff = vector3_create(0, 0, 0);
+    vector3_t spec = vector3_create(0, 0, 0);
+    vector3_t normal = vector3_create(0, 0, 0);
+
 
     // For each light in the world
     for (int i = 0; i < numLights; i++) {
 
-      light_t *light = (light_t *) lights[i];
+      light = (light_t *) lights[i];
 
-      // Calculate light 
-      vector3_t lIntersect= vector3_add(vector3_scale(direction, t), origin);
-      vector3_t lDirection = vector3_sub(lIntersect, light->position);
-      double lDistance = vector3_mag(lDirection);
+      // Get intersection point
+      vector3_scale(tempVector, direction, t);
+      vector3_add(lIntersect, tempVector, origin);
 
-      // Normalize light direction vector
-      lDirection = vector3_normalize(lDirection);
+      vector3_sub(lDirection, lIntersect, light->position); // Get l->o vector
+      lDistance = vector3_mag(lDirection);
 
-      double shadowObjectT = rayObjectIntersect(NULL, object, lIntersect,
-                                                lDirection, scene, numObjects);
+      vector3_normalize(lDirection); // Normalize light direction vector
+
+      shadowObjectT = rayObjectIntersect(NULL, object, lIntersect,
+                                         lDirection, scene, numObjects);
 
       // Only color the object if there isn't an object any closer
       if (shadowObjectT == NO_INTERSECTION_FOUND || shadowObjectT > lDistance) {
 
-        // Calculate color
-        double frad = radialAttenuation(light, lDistance);
-        double fang = angularAttenuation(light, lDirection);
-        vector3_t diff;
-        vector3_t spec;
+        // TODO: Calculate color
+        frad = radialAttenuation(light, lDistance);
+        fang = angularAttenuation(light, lDirection);
         
         if (object->kind == OBJECT_KIND_SPHERE) {
           sphere_t *sphere = (sphere_t *) object;
-          vector3_t normal = vector3_sub(lIntersect, sphere->position);
-          diff = diffuseReflection(sphere->diffuse_color, light->color,
+          vector3_sub(normal, lIntersect, sphere->position); // Calculate normal
+          diffuseReflection(diff, sphere->diffuse_color, light->color,
                                    normal, lDirection);
-          spec = specularReflection(sphere->specular_color, light->color,
+          specularReflection(spec, sphere->specular_color, light->color,
                                     direction, NULL, 20); // TODO: Calculate reflection and add here
         }
         else if (object->kind == OBJECT_KIND_PLANE) {
           plane_t *plane = (plane_t *) object;
-          diff = diffuseReflection(plane->diffuse_color, light->color,
-                                   plane->normal, lDirection);
-          spec = specularReflection(plane->specular_color, light->color,
-                                    direction, NULL, 20);
+          diffuseReflection(diff, plane->diffuse_color, light->color,
+                            plane->normal, lDirection);
+          specularReflection(spec, plane->specular_color, light->color,
+                             direction, NULL, 20);
         }
 
-        tempColor = vector3_scale(vector3_add(diff, spec), frad * fang);
-        color[0] += tempColor[0];
-        color[1] += tempColor[1];
-        color[2] += tempColor[2];
+        // Calculate color values for each channel
+        vector3_add(tempVector, diff, spec);
+        vector3_scale(tempVector, tempVector, frad * fang);
+
+        // Add to color channels
+        color[0] += tempVector[0];
+        color[1] += tempVector[1];
+        color[2] += tempVector[2];
       }
     }
 
@@ -124,12 +143,20 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     color[1] = clampValue(color[1], 0.0, 1.0);
     color[2] = clampValue(color[2], 0.0, 1.0);
 
+    // Clean up allocated memory
+    free(tempVector);
+    free(lIntersect);
+    free(lDirection);
+    free(diff);
+    free(spec);
+    free(normal);
+
     return color;
   }
 }
 
 
-// Actually creates and initializes the image
+// Actually creates and initializes the image, iterates over view plane
 int renderImage(ppm_t *ppmImage, camera_t *camera,
                 object_t **scene, int numObjects,
                 object_t **lights, int numLights) {
@@ -138,19 +165,27 @@ int renderImage(ppm_t *ppmImage, camera_t *camera,
   double pixHeight = camera->height/ppmImage->height;
   double pixWidth = camera->width/ppmImage->width;
 
+  // Declare the variables only once
+  double yCoord;
+  double xCoord;
+  vector3_t direction = vector3_create(0, 0, 0);
+  vector3_t color;
+
   for (int i = 0; i < ppmImage->height; i++) {
-    double yCoord = camera->height/2 - pixHeight * (i + 0.5);
+    yCoord = camera->height/2 - pixHeight * (i + 0.5);
 
     for (int j = 0; j < ppmImage->width; j++) {
-      double xCoord = -camera->width/2 + pixWidth * (j + 0.5);
+      xCoord = -camera->width/2 + pixWidth * (j + 0.5);
 
       // Create direction vector
-      vector3_t direction = vector3_createUnit(xCoord, yCoord, -FOCAL_LENGTH);
+      direction[0] = xCoord;
+      direction[1] = yCoord;
+      direction[2] = -FOCAL_LENGTH;
+      vector3_normalize(direction);
 
       // Get color from raycast
-      vector3_t color = raycast(camera->position, direction,
-                                scene, numObjects,
-                                lights, numLights);
+      color = raycast(camera->position, direction, scene, numObjects,
+                      lights, numLights);
 
       // Populate pixel with color data
       ppmImage->pixels[i*ppmImage->width + j].r = (int) (color[0] * 255);
@@ -215,11 +250,6 @@ int main(int argc, char *argv[]) {
   // Create actual PPM image from scene
   renderImage(ppmImage, camera, scene, numObjects[0], lights, numObjects[1]);
 
-  // Clean up allocated memory
-  free(camera);
-  free(scene);
-  free(lights);
-
   // Handle open errors on output file
   if (!(outputFH = fopen(outputFName, "w"))) {
     fprintf(stderr, "Error: Unable to open '%s' for writing\n", outputFName);
@@ -230,8 +260,6 @@ int main(int argc, char *argv[]) {
   writePPM(ppmImage, outputFH, PPM_OUTPUT_VERSION);
 
   // Final program clean up
-  free(ppmImage->pixels);
-  free(ppmImage);
   fclose(inputFH);
 
   return 0;

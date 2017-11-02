@@ -19,12 +19,13 @@ double radialAttenuation(light_t *light, double distance);
 
 double angularAttenuation(light_t *light, vector3_t objDirection);
 
-vector3_t diffuseReflection(vector3_t objColor, vector3_t lightColor,
-                            vector3_t normal, vector3_t lDirection);
+void diffuseReflection(vector3_t outColor, vector3_t objColor,
+                       vector3_t lightColor, vector3_t normal,
+                       vector3_t lDirection);
 
-vector3_t specularReflection(vector3_t objColor, vector3_t lightColor,
-                             vector3_t direction, vector3_t reflection,
-                             double shininess);
+void specularReflection(vector3_t outColor, vector3_t objColor,
+                        vector3_t lightColor, vector3_t direction,
+                        vector3_t reflection, double shininess);
 
 double clampValue(double value, double min, double max);
 

@@ -31,10 +31,14 @@ double angularAttenuation(light_t *light, vector3_t objDirection) {
 }
 
 
-vector3_t diffuseReflection(vector3_t objColor, vector3_t lightColor,
-                            vector3_t normal, vector3_t lDirection) {
+void diffuseReflection(vector3_t outColor, vector3_t objColor,
+                       vector3_t lightColor, vector3_t normal,
+                       vector3_t lDirection) {
 
-  return objColor;
+  // TODO: Replace with actual calculation
+  outColor[0] = objColor[0];
+  outColor[1] = objColor[1];
+  outColor[2] = objColor[2];
 
   /*vector3_t output = vector3_create(0, 0, 0);
   double product = vector3_dot(normal, lDirection) * M_PI/180;
@@ -48,11 +52,15 @@ vector3_t diffuseReflection(vector3_t objColor, vector3_t lightColor,
   return output;*/
 }
 
-vector3_t specularReflection(vector3_t objColor, vector3_t lightColor,
-                             vector3_t direction, vector3_t reflection,
-                             double shininess) {
+void specularReflection(vector3_t outColor, vector3_t objColor,
+                        vector3_t lightColor, vector3_t direction,
+                        vector3_t reflection, double shininess) {
 
-  return objColor;
+  // TODO: Replace with actual calculation
+  outColor[0] = objColor[0];
+  outColor[1] = objColor[1];
+  outColor[2] = objColor[2];
+
   /*vector3_t output = vector3_create(0, 0, 0);
   double product = vector3_dot(normal, lDirection);
   if (product > 0) {
@@ -133,8 +141,12 @@ double planeIntersect(vector3_t origin, vector3_t direction, plane_t* plane) {
   }
   
   // Calculate the t scalar of intersection
-  vector3_t subVector = vector3_sub(plane->position, origin);
+  vector3_t subVector = vector3_create(0, 0, 0);
+  vector3_sub(subVector, plane->position, origin);
+
   double t = vector3_dot(subVector, plane->normal) / product;
+
+  free(subVector);
 
   // Only return t when it is a positive scalar
   if (t > 0) {
