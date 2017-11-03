@@ -1,5 +1,5 @@
 camera, width: 0.5, height: 0.5, position: [0, 0, 0]
-sphere, diffuse_color: [0.1, 0.5, 0.2], specular_color: [0, 0, 0], position: [ 2,8, -60 ], radius: 8
+sphere, diffuse_color: [0.1, 0.5, 0.2], specular_color: [0.2, 0.2, 0.2], position: [ 2,8, -60 ], radius: 8
 plane, diffuse_color: [ 0.6, 0.5,0.2], specular_color: [0, 0, 0], position: [0,0, -68], normal: [0, 4, 1]
-light, color: [ 1, 1,1], theta: 0, radial-a2: 0.0125, radial-a1: 0, radial-a0: 0, position: [-5,-1, -50]
-light, color: [ 2, 2,2], theta: 18, angular-a0: 30, position: [6,20, -48], direction: [0,-1, 0.25]
+light, color: [ 1, 1,1], theta: 0, radial-a2: 0.0125, radial-a1: 0, radial-a0: 0, position: [-5,2, -48]
+light, color: [ 1, 1,1], theta: 18, angular-a0: 36, position: [6,20, -48], direction: [0,-1, -0.25]

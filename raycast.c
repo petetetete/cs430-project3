@@ -6,7 +6,7 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
                           vector3_t origin, vector3_t direction,
                           object_t **scene, int numObjects) {
 
-  // Track closet object
+  // Track closest object
   object_t *closestObject = NULL;
   double closestT = INFINITY;
 
@@ -19,9 +19,8 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
     // Current object
     currObject = scene[i];
 
-    if (skipObject != NULL && currObject == skipObject) {
+    if (skipObject != NULL && currObject == skipObject)
       continue;
-    }
 
     // Determine which intersection type to check for
     switch (currObject->kind) {
@@ -39,7 +38,6 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
       closestObject = currObject;
     }
   }
-
 
 
   if (closestObject == NULL) {
@@ -80,11 +78,12 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     double lDistance;
     double shadowObjectT;
 
-    double frad;
-    double fang;
+    double frad = 1;
+    double fang = 1;
     vector3_t diff = vector3_create(0, 0, 0);
     vector3_t spec = vector3_create(0, 0, 0);
     vector3_t normal = vector3_create(0, 0, 0);
+    vector3_t reflection = vector3_create(0, 0, 0);
 
 
     // For each light in the world
@@ -96,10 +95,14 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
       vector3_scale(tempVector, direction, t);
       vector3_add(lIntersect, tempVector, origin);
 
-      vector3_sub(lDirection, lIntersect, light->position); // Get l->o vector
+      vector3_sub(lDirection, light->position, lIntersect); // Get l->o vector
       lDistance = vector3_mag(lDirection);
 
       vector3_normalize(lDirection); // Normalize light direction vector
+
+      // Calculate reflection vector
+      vector3_scale(tempVector, normal, vector3_dot(direction, normal)*2);
+      vector3_sub(reflection, direction, tempVector);
 
       shadowObjectT = rayObjectIntersect(NULL, object, lIntersect,
                                          lDirection, scene, numObjects);
@@ -107,34 +110,31 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
       // Only color the object if there isn't an object any closer
       if (shadowObjectT == NO_INTERSECTION_FOUND || shadowObjectT > lDistance) {
 
-        // TODO: Calculate color
         frad = radialAttenuation(light, lDistance);
         fang = angularAttenuation(light, lDirection);
         
         if (object->kind == OBJECT_KIND_SPHERE) {
           sphere_t *sphere = (sphere_t *) object;
           vector3_sub(normal, lIntersect, sphere->position); // Calculate normal
+          
           diffuseReflection(diff, sphere->diffuse_color, light->color,
-                                   normal, lDirection);
+                            normal, lDirection);
           specularReflection(spec, sphere->specular_color, light->color,
-                                    direction, NULL, 20); // TODO: Calculate reflection and add here
+                               direction, reflection, 20);
         }
         else if (object->kind == OBJECT_KIND_PLANE) {
           plane_t *plane = (plane_t *) object;
+
           diffuseReflection(diff, plane->diffuse_color, light->color,
                             plane->normal, lDirection);
           specularReflection(spec, plane->specular_color, light->color,
-                             direction, NULL, 20);
+                               direction, reflection, 20);
         }
 
-        // Calculate color values for each channel
-        vector3_add(tempVector, diff, spec);
-        vector3_scale(tempVector, tempVector, frad * fang);
-
         // Add to color channels
-        color[0] += tempVector[0];
-        color[1] += tempVector[1];
-        color[2] += tempVector[2];
+        color[0] += frad * fang * (diff[0] + spec[0]);
+        color[1] += frad * fang * (diff[1] + spec[1]);
+        color[2] += frad * fang * (diff[2] + spec[2]);
       }
     }
 
@@ -150,6 +150,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     free(diff);
     free(spec);
     free(normal);
+    free(reflection);
 
     return color;
   }

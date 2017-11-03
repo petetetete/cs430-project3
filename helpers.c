@@ -35,41 +35,37 @@ void diffuseReflection(vector3_t outColor, vector3_t objColor,
                        vector3_t lightColor, vector3_t normal,
                        vector3_t lDirection) {
 
-  // TODO: Replace with actual calculation
-  outColor[0] = objColor[0];
+  // Testing example, just returns object color
+  /*outColor[0] = objColor[0];
   outColor[1] = objColor[1];
-  outColor[2] = objColor[2];
+  outColor[2] = objColor[2];*/
 
-  /*vector3_t output = vector3_create(0, 0, 0);
-  double product = vector3_dot(normal, lDirection) * M_PI/180;
+  double product = vector3_dot(normal, lDirection);
+
   if (product > 0) {
-    printf("%.3f\n", product);
-    output[0] = objColor[0]*lightColor[0]*product;
-    output[1] = objColor[1]*lightColor[1]*product;
-    output[2] = objColor[2]*lightColor[2]*product;
+    outColor[0] = objColor[0]*lightColor[0]*product;
+    outColor[1] = objColor[1]*lightColor[1]*product;
+    outColor[2] = objColor[2]*lightColor[2]*product;
   }
-
-  return output;*/
 }
 
 void specularReflection(vector3_t outColor, vector3_t objColor,
                         vector3_t lightColor, vector3_t direction,
                         vector3_t reflection, double shininess) {
 
-  // TODO: Replace with actual calculation
-  outColor[0] = objColor[0];
+  // Testing example, just returns object color
+  /*outColor[0] = objColor[0];
   outColor[1] = objColor[1];
-  outColor[2] = objColor[2];
+  outColor[2] = objColor[2];*/
 
-  /*vector3_t output = vector3_create(0, 0, 0);
-  double product = vector3_dot(normal, lDirection);
+  double product = vector3_dot(direction, reflection);
+
   if (product > 0) {
-    output[0] = objColor[0]*lightColor[0]*product;
-    output[1] = objColor[1]*lightColor[1]*product;
-    output[2] = objColor[2]*lightColor[2]*product;
+    product = pow(product, shininess);
+    outColor[0] = objColor[0]*lightColor[0]*pow(product, shininess);
+    outColor[1] = objColor[1]*lightColor[1]*pow(product, shininess);
+    outColor[2] = objColor[2]*lightColor[2]*pow(product, shininess);
   }
-
-  return output;*/
 }
 
 
