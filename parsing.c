@@ -59,10 +59,10 @@ int parseLight(light_t *light, char *line) {
   light->kind = OBJECT_KIND_LIGHT;
 
   // Variables to parse in to
-  vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY); // Shared
+  vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t color = vector3_create(INFINITY, INFINITY, INFINITY);
   double theta = 0;
-  double radialA0 = INFINITY; // Light properties
+  double radialA0 = INFINITY;
   double radialA1 = INFINITY;
   double radialA2 = INFINITY;
   double angularA0 = INFINITY; // Spot light properties
@@ -71,15 +71,19 @@ int parseLight(light_t *light, char *line) {
   // Try to find elements in line
   char *positionStart = strstr(line, "position:");
   char *colorStart = strstr(line, "color:");
-  char *thetaStart = strstr(line, "theta:");
   char *radialA0Start = strstr(line, "radial-a0:");
   char *radialA1Start = strstr(line, "radial-a1:");
   char *radialA2Start = strstr(line, "radial-a2:");
+  char *thetaStart = strstr(line, "theta:");
   char *angularA0Start = strstr(line, "angular-a0:");
   char *directionStart = strstr(line, "direction:");
 
   // Catch obviously invalid objects
-  if (positionStart == NULL || colorStart == NULL) {
+  if (positionStart == NULL ||
+      colorStart == NULL ||
+      radialA0Start == NULL ||
+      radialA1Start == NULL ||
+      radialA2Start == NULL) {
     return INVALID_PARSE_LINE;
   }
 
@@ -88,14 +92,28 @@ int parseLight(light_t *light, char *line) {
          &position[0], &position[1], &position[2]);
   sscanf(colorStart + 6, " [%lf , %lf , %lf],",
          &color[0], &color[1], &color[2]);
+  sscanf(radialA0Start + 10, "%lf,", &radialA0);
+  sscanf(radialA1Start + 10, "%lf,", &radialA1);
+  sscanf(radialA2Start + 10, "%lf,", &radialA2);
 
   // Bail out early if the global light properties are bad
   if (position[0] == INFINITY ||
       position[1] == INFINITY ||
       position[2] == INFINITY ||
-      color[0] == INFINITY || color[1] == INFINITY || color[2] == INFINITY) {
+      color[0] == INFINITY ||
+      color[1] == INFINITY ||
+      color[2] == INFINITY ||
+      radialA0 == INFINITY ||
+      radialA1 == INFINITY ||
+      radialA2 == INFINITY) {
     return INVALID_PARSE_LINE;
   }
+
+  light->position = position;
+  light->color = color;
+  light->radial_a0 = radialA0;
+  light->radial_a1 = radialA1;
+  light->radial_a2 = radialA2;
 
   // Determine type of light
   if (thetaStart != NULL)
@@ -104,35 +122,6 @@ int parseLight(light_t *light, char *line) {
   // If light is a point light
   if (thetaStart == NULL || theta == 0) {
     light->light_kind = LIGHT_KIND_POINT;
-
-    if (radialA0Start == NULL ||
-        radialA1Start == NULL ||
-        radialA2Start == NULL) {
-      return INVALID_PARSE_LINE;
-    }
-
-    // Get point light properties
-    sscanf(radialA0Start + 10, "%lf,", &radialA0);
-    sscanf(radialA1Start + 10, "%lf,", &radialA1);
-    sscanf(radialA2Start + 10, "%lf,", &radialA2);
-
-    // Catch invalid values
-    if (radialA0 == INFINITY ||
-        radialA1 == INFINITY ||
-        radialA2 == INFINITY) {
-      return INVALID_PARSE_LINE;
-    }
-    else {
-
-      // Populate light
-      light->position = position;
-      light->color = color;
-      light->radial_a0 = radialA0;
-      light->radial_a1 = radialA1;
-      light->radial_a2 = radialA2;
-
-      return 0;
-    }
   }
 
   // If light is a spot light
@@ -156,18 +145,16 @@ int parseLight(light_t *light, char *line) {
         direction[2] == INFINITY) {
       return INVALID_PARSE_LINE;
     }
-    else {
 
-      // Populate light
-      light->position = position;
-      light->color = color;
-      light->theta = theta;
-      light->angular_a0 = angularA0;
-      light->direction = direction;
+    // Populate light
+    light->theta = theta;
+    light->angular_a0 = angularA0;
+    light->direction = direction;
 
-      return 0;
-    }
+    vector3_normalize(light->direction);
   }
+
+  return 0;
 }
 
 
@@ -280,6 +267,8 @@ int parsePlane(plane_t *plane, char *line) {
     plane->position = position;
     plane->normal = normal;
 
+    vector3_normalize(plane->normal);
+
     return 0;
   }
 }
@@ -299,7 +288,9 @@ int *parseInput(camera_t *camera, object_t **scene,
   int cameraFound = 1; // Default to false
   char line[MAX_LINE_LENGTH];
 
-  while (fgets(line, MAX_LINE_LENGTH, file)) {
+  while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+
+    if (line[0] == '\n' || line[0] == '\r') continue; // Skip blank lines
 
     // Get object type
     char objectType[20];

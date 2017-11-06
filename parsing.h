@@ -60,10 +60,10 @@ struct light_t {
   struct object_t;
   vector3_t position;
   vector3_t color;
-  double theta;
   double radial_a2;
   double radial_a1;
   double radial_a0;
+  double theta;
   double angular_a0;
   vector3_t direction;
   int light_kind;

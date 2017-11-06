@@ -73,7 +73,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     // Declare variables all only once
     light_t *light;
     vector3_t lIntersect = vector3_create(0, 0, 0);
-    vector3_t loDirection = vector3_create(0, 0, 0);
+    vector3_t olDirection = vector3_create(0, 0, 0);
     double lDistance;
     double shadowObjectT;
 
@@ -93,18 +93,19 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
       vector3_scale(tempVector, direction, t);
       vector3_add(lIntersect, tempVector, origin);
 
-      // Get light to object vector and distance
-      vector3_sub(loDirection, light->position, lIntersect);
-      lDistance = vector3_mag(loDirection);
-      vector3_normalize(loDirection);
+      // Get object to light vector and distance
+      vector3_sub(olDirection, light->position, lIntersect);
+      lDistance = vector3_mag(olDirection);
+      vector3_scale(olDirection, olDirection, 1 / lDistance); // Normalize dir
 
       // Calculate reflection vector
-      vector3_scale(tempVector, normal, vector3_dot(direction, normal)*2);
-      vector3_sub(reflection, direction, tempVector);
+      vector3_scale(tempVector, normal, 2*vector3_dot(olDirection, normal));
+      vector3_sub(reflection, olDirection, tempVector);
+      vector3_normalize(reflection);
 
       // Get the t value of an intersecting object that casts shadows 
       shadowObjectT = rayObjectIntersect(NULL, object,
-                                         lIntersect, loDirection,
+                                         lIntersect, olDirection,
                                          scene, numObjects);
 
       // Only color the object if there isn't an object any closer
@@ -112,25 +113,25 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
 
         // Calculate the attentuation factors
         frad = radialAttenuation(light, lDistance);
-        fang = angularAttenuation(light, loDirection);
+        fang = angularAttenuation(light, olDirection);
         
-
         if (object->kind == OBJECT_KIND_SPHERE) {
           sphere_t *sphere = (sphere_t *) object;
           vector3_sub(normal, lIntersect, sphere->position); // Calculate normal
-          
+          vector3_normalize(normal);
+
           diffuseReflection(diff, sphere->diffuse_color, light->color,
-                            normal, loDirection);
+                            normal, olDirection);
           specularReflection(spec, sphere->specular_color, light->color,
-                               direction, reflection, 20);
+                             direction, reflection, 20);
         }
         else if (object->kind == OBJECT_KIND_PLANE) {
           plane_t *plane = (plane_t *) object;
 
           diffuseReflection(diff, plane->diffuse_color, light->color,
-                            plane->normal, loDirection);
+                            plane->normal, olDirection);
           specularReflection(spec, plane->specular_color, light->color,
-                               direction, reflection, 20);
+                             direction, reflection, 20);
         }
 
         // Add to color channels
@@ -148,7 +149,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     // Clean up allocated memory
     free(tempVector);
     free(lIntersect);
-    free(loDirection);
+    free(olDirection);
     free(diff);
     free(spec);
     free(normal);

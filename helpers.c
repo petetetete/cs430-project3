@@ -3,14 +3,9 @@
 
 
 double radialAttenuation(light_t *light, double distance) {
-  if (light->light_kind == LIGHT_KIND_SPOT || distance == INFINITY) {
-    return 1.0;
-  }
-  else {
-    return 1 / (light->radial_a0 +
-                light->radial_a1 * distance +
-                light->radial_a2 * pow(distance, 2));
-  }
+  return 1 / (light->radial_a0 +
+              light->radial_a1 * distance +
+              light->radial_a2 * pow(distance, 2));
 }
 
 
@@ -39,11 +34,6 @@ void diffuseReflection(vector3_t outColor, vector3_t objColor,
                        vector3_t lightColor, vector3_t normal,
                        vector3_t lDirection) {
 
-  // Testing example, just returns object color
-  /*outColor[0] = objColor[0];
-  outColor[1] = objColor[1];
-  outColor[2] = objColor[2];*/
-
   double product = vector3_dot(normal, lDirection);
 
   if (product > 0) {
@@ -51,16 +41,16 @@ void diffuseReflection(vector3_t outColor, vector3_t objColor,
     outColor[1] = objColor[1]*lightColor[1]*product;
     outColor[2] = objColor[2]*lightColor[2]*product;
   }
+  else {
+    outColor[0] = 0;
+    outColor[1] = 0;
+    outColor[2] = 0;
+  }
 }
 
 void specularReflection(vector3_t outColor, vector3_t objColor,
                         vector3_t lightColor, vector3_t direction,
                         vector3_t reflection, double shininess) {
-
-  // Testing example, just returns object color
-  /*outColor[0] = objColor[0];
-  outColor[1] = objColor[1];
-  outColor[2] = objColor[2];*/
 
   double product = vector3_dot(direction, reflection);
 
@@ -69,6 +59,11 @@ void specularReflection(vector3_t outColor, vector3_t objColor,
     outColor[0] = objColor[0]*lightColor[0]*pow(product, shininess);
     outColor[1] = objColor[1]*lightColor[1]*pow(product, shininess);
     outColor[2] = objColor[2]*lightColor[2]*pow(product, shininess);
+  }
+  else {
+    outColor[0] = 0;
+    outColor[1] = 0;
+    outColor[2] = 0;
   }
 }
 
