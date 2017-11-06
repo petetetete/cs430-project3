@@ -19,6 +19,7 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
     // Current object
     currObject = scene[i];
 
+    // Skip the requested object-to-be-skipped
     if (skipObject != NULL && currObject == skipObject)
       continue;
 
@@ -38,7 +39,6 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
       closestObject = currObject;
     }
   }
-
 
   if (closestObject == NULL) {
     outObject = NULL;
@@ -64,17 +64,16 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
   if (t == NO_INTERSECTION_FOUND) {
     return vector3_create(0, 0, 0); // Void color
   }
+
+  // Calculate ShadingW
   else {
-
-    // Calculate Shading
-
     vector3_t color = vector3_create(0, 0, 0); // TODO: Add ambient light
     vector3_t tempVector = vector3_create(0, 0, 0); // For calculations
 
     // Declare variables all only once
     light_t *light;
     vector3_t lIntersect = vector3_create(0, 0, 0);
-    vector3_t lDirection = vector3_create(0, 0, 0);
+    vector3_t loDirection = vector3_create(0, 0, 0);
     double lDistance;
     double shadowObjectT;
 
@@ -85,40 +84,43 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     vector3_t normal = vector3_create(0, 0, 0);
     vector3_t reflection = vector3_create(0, 0, 0);
 
-
     // For each light in the world
     for (int i = 0; i < numLights; i++) {
 
-      light = (light_t *) lights[i];
+      light = (light_t *) lights[i]; // Current light
 
       // Get intersection point
       vector3_scale(tempVector, direction, t);
       vector3_add(lIntersect, tempVector, origin);
 
-      vector3_sub(lDirection, light->position, lIntersect); // Get l->o vector
-      lDistance = vector3_mag(lDirection);
-
-      vector3_normalize(lDirection); // Normalize light direction vector
+      // Get light to object vector and distance
+      vector3_sub(loDirection, light->position, lIntersect);
+      lDistance = vector3_mag(loDirection);
+      vector3_normalize(loDirection);
 
       // Calculate reflection vector
       vector3_scale(tempVector, normal, vector3_dot(direction, normal)*2);
       vector3_sub(reflection, direction, tempVector);
 
-      shadowObjectT = rayObjectIntersect(NULL, object, lIntersect,
-                                         lDirection, scene, numObjects);
+      // Get the t value of an intersecting object that casts shadows 
+      shadowObjectT = rayObjectIntersect(NULL, object,
+                                         lIntersect, loDirection,
+                                         scene, numObjects);
 
       // Only color the object if there isn't an object any closer
       if (shadowObjectT == NO_INTERSECTION_FOUND || shadowObjectT > lDistance) {
 
+        // Calculate the attentuation factors
         frad = radialAttenuation(light, lDistance);
-        fang = angularAttenuation(light, lDirection);
+        fang = angularAttenuation(light, loDirection);
         
+
         if (object->kind == OBJECT_KIND_SPHERE) {
           sphere_t *sphere = (sphere_t *) object;
           vector3_sub(normal, lIntersect, sphere->position); // Calculate normal
           
           diffuseReflection(diff, sphere->diffuse_color, light->color,
-                            normal, lDirection);
+                            normal, loDirection);
           specularReflection(spec, sphere->specular_color, light->color,
                                direction, reflection, 20);
         }
@@ -126,7 +128,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
           plane_t *plane = (plane_t *) object;
 
           diffuseReflection(diff, plane->diffuse_color, light->color,
-                            plane->normal, lDirection);
+                            plane->normal, loDirection);
           specularReflection(spec, plane->specular_color, light->color,
                                direction, reflection, 20);
         }
@@ -146,7 +148,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     // Clean up allocated memory
     free(tempVector);
     free(lIntersect);
-    free(lDirection);
+    free(loDirection);
     free(diff);
     free(spec);
     free(normal);

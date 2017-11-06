@@ -16,12 +16,16 @@ double radialAttenuation(light_t *light, double distance) {
 
 double angularAttenuation(light_t *light, vector3_t objDirection) {
 
+  vector3_t tempObjDirection = vector3_create(0, 0, 0);
+  vector3_scale(tempObjDirection, objDirection, -1);
+
   if (light->light_kind != LIGHT_KIND_SPOT) {
     return 1.0;
   }
 
-  double dot = vector3_dot(objDirection, light->direction);
-
+  double dot = vector3_dot(tempObjDirection, light->direction);
+  free(tempObjDirection);
+  
   if (acos(dot) * 180.0 / M_PI > light->theta) {
     return 0.0;
   }
@@ -128,7 +132,7 @@ double sphereIntersect(vector3_t origin, vector3_t direction,
 }
 
 
-double planeIntersect(vector3_t origin, vector3_t direction, plane_t* plane) {
+double planeIntersect(vector3_t origin, vector3_t direction, plane_t *plane) {
 
   // No intersections if the vector is parallel to the plane
   double product = vector3_dot(direction, plane->normal);
