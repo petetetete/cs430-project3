@@ -49,10 +49,10 @@ void diffuseReflection(vector3_t outColor, vector3_t objColor,
 }
 
 void specularReflection(vector3_t outColor, vector3_t objColor,
-                        vector3_t lightColor, vector3_t direction,
+                        vector3_t lightColor, vector3_t ovDirection,
                         vector3_t reflection, double shininess) {
 
-  double product = vector3_dot(direction, reflection);
+  double product = vector3_dot(ovDirection, reflection);
 
   if (product > 0) {
     product = pow(product, shininess);

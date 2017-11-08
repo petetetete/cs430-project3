@@ -49,15 +49,15 @@ void diffuseReflection(vector3_t outColor, vector3_t objColor,
 /**
  * Calculate specular reflection value of the point on an object
  * 
- * @param outColor    output vector representing color
- * @param objColor    current object color
- * @param lightColor  ambient color of the light
- * @param direction   vector from object to camera
- * @param reflection  reflection of the normal vector
- * @param shininess   shininess of particular object
+ * @param outColor      output vector representing color
+ * @param objColor      current object color
+ * @param lightColor    ambient color of the light
+ * @param ovDirection   vector from object to camera
+ * @param reflection    reflection of the normal vector
+ * @param shininess     shininess of particular object
  */
 void specularReflection(vector3_t outColor, vector3_t objColor,
-                        vector3_t lightColor, vector3_t direction,
+                        vector3_t lightColor, vector3_t ovDirection,
                         vector3_t reflection, double shininess);
 
 /**

@@ -72,6 +72,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     vector3_t lIntersect = vector3_create(0, 0, 0);
     vector3_t lIntersectOffset = vector3_create(0, 0, 0);
     vector3_t olDirection = vector3_create(0, 0, 0);
+    vector3_t ovDirection = vector3_create(0, 0, 0);
     double lDistance;
     double shadowObjectT;
 
@@ -81,6 +82,9 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     vector3_t spec = vector3_create(0, 0, 0);
     vector3_t normal = vector3_create(0, 0, 0);
     vector3_t reflection = vector3_create(0, 0, 0);
+
+    // Calculate values that do not change on a light by light vasis
+    vector3_scale(ovDirection, direction, -1);
 
     // For each light in the world
     for (int i = 0; i < numLights; i++) {
@@ -109,7 +113,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
 
       // Calculate reflection vector
       vector3_scale(tempVector, normal, 2*vector3_dot(olDirection, normal));
-      vector3_sub(reflection, olDirection, tempVector);
+      vector3_sub(reflection, tempVector, olDirection);
       vector3_normalize(reflection);
 
       // Calculate the object intersect origin by shifting intersect off object
@@ -133,13 +137,13 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
             diffuseReflection(diff, ((sphere_t *) object)->diffuse_color,
                               light->color, normal, olDirection);
             specularReflection(spec, ((sphere_t *) object)->specular_color,
-                               light->color, direction, reflection, 20);
+                               light->color, ovDirection, reflection, 20);
             break;
           case OBJECT_KIND_PLANE:
             diffuseReflection(diff, ((plane_t *) object)->diffuse_color,
                               light->color, normal, olDirection);
             specularReflection(spec, ((plane_t *) object)->specular_color,
-                               light->color, direction, reflection, 20);
+                               light->color, ovDirection, reflection, 20);
             break;
         }
 
@@ -160,6 +164,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     free(lIntersect);
     free(lIntersectOffset);
     free(olDirection);
+    free(ovDirection);
     free(diff);
     free(spec);
     free(normal);
