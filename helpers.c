@@ -9,17 +9,17 @@ double radialAttenuation(light_t *light, double distance) {
 }
 
 
-double angularAttenuation(light_t *light, vector3_t objDirection) {
+double angularAttenuation(light_t *light, vector3_t loDirection) {
 
-  vector3_t tempObjDirection = vector3_create(0, 0, 0);
-  vector3_scale(tempObjDirection, objDirection, -1);
+  vector3_t tempOlDirection = vector3_create(0, 0, 0);
+  vector3_scale(tempOlDirection, loDirection, -1);
 
   if (light->light_kind != LIGHT_KIND_SPOT) {
     return 1.0;
   }
 
-  double dot = vector3_dot(tempObjDirection, light->direction);
-  free(tempObjDirection);
+  double dot = vector3_dot(tempOlDirection, light->direction);
+  free(tempOlDirection);
   
   if (acos(dot) * 180.0 / M_PI > light->theta) {
     return 0.0;
@@ -32,9 +32,9 @@ double angularAttenuation(light_t *light, vector3_t objDirection) {
 
 void diffuseReflection(vector3_t outColor, vector3_t objColor,
                        vector3_t lightColor, vector3_t normal,
-                       vector3_t lDirection) {
+                       vector3_t olDirection) {
 
-  double product = vector3_dot(normal, lDirection);
+  double product = vector3_dot(normal, olDirection);
 
   if (product > 0) {
     outColor[0] = objColor[0]*lightColor[0]*product;
@@ -93,12 +93,8 @@ double sphereIntersect(vector3_t origin, vector3_t direction,
                 direction[1]*(origin[1] - position[1]) +
                 direction[2]*(origin[2] - position[2]));
 
-  double c = pow(position[0], 2) +
-             pow(position[1], 2) +
-             pow(position[2], 2) +
-             pow(origin[0], 2) +
-             pow(origin[1], 2) +
-             pow(origin[2], 2) +
+  double c = pow(position[0], 2) + pow(position[1], 2) + pow(position[2], 2) +
+             pow(origin[0], 2) + pow(origin[1], 2) + pow(origin[2], 2) +
              -2*(position[0]*origin[0] +
                  position[1]*origin[1] +
                  position[2]*origin[2]) -

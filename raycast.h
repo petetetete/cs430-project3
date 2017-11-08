@@ -26,6 +26,17 @@ Usage: raycast width height input_file output.ppm\n\
   output_file: final out PPM file name\n"
 
 
+/**
+ * Raycast primitive used to send a ray and determine if an
+ * object was hit and the t intersection location of it
+ * 
+ * @param  outObject   reference to object that was hit
+ * @param  origin      point to send the ray from
+ * @param  direction   direction to send the ray
+ * @param  scene       list of all objects in scene
+ * @param  numObjects  number of objects in the scene
+ * @return             the t value of the intersection point
+ */
 double rayObjectIntersect(object_t **outObject, vector3_t origin,
                           vector3_t direction, object_t **scene,
                           int numObjects);
