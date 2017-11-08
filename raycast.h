@@ -15,6 +15,7 @@
 #define MAX_SCENE_OBJECTS 128
 #define MAX_SCENE_LIGHTS 128
 #define FOCAL_LENGTH 1.0 // In world units
+#define EPSILON_OFFSET 0.000125
 
 // String constants
 #define USAGE_MESSAGE "\
@@ -25,9 +26,9 @@ Usage: raycast width height input_file output.ppm\n\
   output_file: final out PPM file name\n"
 
 
-double rayObjectIntersect(object_t **outObject, object_t *skipObject,
-                          vector3_t origin, vector3_t direction,
-                          object_t **scene, int numObjects);
+double rayObjectIntersect(object_t **outObject, vector3_t origin,
+                          vector3_t direction, object_t **scene,
+                          int numObjects);
 
 /**
  * Casts a single ray given a particular scene and direction vector,

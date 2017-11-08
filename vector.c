@@ -45,6 +45,13 @@ void vector3_normalize(vector3_t a) {
 }
 
 
+void vector3_copy(vector3_t c, vector3_t a) {
+  c[0] = a[0];
+  c[1] = a[1];
+  c[2] = a[2];
+}
+
+
 vector3_t vector3_create(double a, double b, double c) {
   vector3_t output = malloc(sizeof(double) * 3);
   output[0] = a;

@@ -62,6 +62,19 @@ void vector3_cross(vector3_t c, vector3_t a, vector3_t b);
  */
 double vector3_mag(vector3_t a);
 
+/**
+ * Copy the values of a vector to another
+ * 
+ * @param  c  output vector to copy in to
+ * @param  a  input vector to copy
+ */
+void vector3_copy(vector3_t c, vector3_t a);
+
+/**
+ * Normalize the vector in to a unit vector
+ * 
+ * @param  a  input vector to normalize
+ */
 void vector3_normalize(vector3_t a);
 
 /**

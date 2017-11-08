@@ -2,28 +2,24 @@
 #include "raycast.h"
 
 
-double rayObjectIntersect(object_t **outObject, object_t *skipObject,
-                          vector3_t origin, vector3_t direction,
-                          object_t **scene, int numObjects) {
+double rayObjectIntersect(object_t **outObject, vector3_t origin,
+                          vector3_t direction, object_t **scene,
+                          int numObjects) {
 
   // Track closest object
   object_t *closestObject = NULL;
   double closestT = INFINITY;
 
+  // Iteration objects
   object_t *currObject = NULL;
   double currT;
 
   // Iterate through all objects to find nearest object
   for (int i = 0; i < numObjects; i++) {
 
-    // Current object
-    currObject = scene[i];
+    currObject = scene[i]; // Save current object
 
-    // Skip the requested object-to-be-skipped
-    if (skipObject != NULL && currObject == skipObject)
-      continue;
-
-    // Determine which intersection type to check for
+    // Check for intersection (depending on object type)
     switch (currObject->kind) {
       case OBJECT_KIND_SPHERE:
         currT = sphereIntersect(origin, direction, (sphere_t *) currObject);
@@ -40,6 +36,7 @@ double rayObjectIntersect(object_t **outObject, object_t *skipObject,
     }
   }
 
+  // Check if any intersection was found
   if (closestObject == NULL) {
     outObject = NULL;
     return NO_INTERSECTION_FOUND;
@@ -56,23 +53,24 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
                   object_t **scene, int numObjects,
                   object_t **lights, int numLights) {
 
+  // Find the intersection point with the nearest object
   object_t *object;
-  double t = rayObjectIntersect(&object, NULL,
-                                origin, direction, scene, numObjects);
+  double t = rayObjectIntersect(&object, origin, direction, scene, numObjects);
 
   // If we did not hit any objects, the pixel is in the void
   if (t == NO_INTERSECTION_FOUND) {
     return vector3_create(0, 0, 0); // Void color
   }
 
-  // Calculate ShadingW
+  // Calculate color value
   else {
-    vector3_t color = vector3_create(0, 0, 0); // TODO: Add ambient light
-    vector3_t tempVector = vector3_create(0, 0, 0); // For calculations
+    vector3_t color = vector3_create(0, 0, 0); // No ambient light
+    vector3_t tempVector = vector3_create(0, 0, 0); // Used in calculations
 
-    // Declare variables all only once
+    // Declare all variables to be used in light loop
     light_t *light;
     vector3_t lIntersect = vector3_create(0, 0, 0);
+    vector3_t lIntersectOffset = vector3_create(0, 0, 0);
     vector3_t olDirection = vector3_create(0, 0, 0);
     double lDistance;
     double shadowObjectT;
@@ -98,14 +96,28 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
       lDistance = vector3_mag(olDirection);
       vector3_scale(olDirection, olDirection, 1 / lDistance); // Normalize dir
 
+      // Calculate current object normal
+      switch (object->kind) {
+        case OBJECT_KIND_SPHERE:
+          vector3_sub(normal, lIntersect, ((sphere_t *) object)->position);
+          vector3_normalize(normal);
+          break;
+        case OBJECT_KIND_PLANE:
+          vector3_copy(normal, ((plane_t *) object)->normal);
+          break;
+      }
+
       // Calculate reflection vector
       vector3_scale(tempVector, normal, 2*vector3_dot(olDirection, normal));
       vector3_sub(reflection, olDirection, tempVector);
       vector3_normalize(reflection);
 
+      // Calculate the object intersect origin by shifting intersect off object
+      vector3_scale(tempVector, normal, EPSILON_OFFSET);
+      vector3_add(lIntersectOffset, lIntersect, tempVector);
+
       // Get the t value of an intersecting object that casts shadows 
-      shadowObjectT = rayObjectIntersect(NULL, object,
-                                         lIntersect, olDirection,
+      shadowObjectT = rayObjectIntersect(NULL, lIntersectOffset, olDirection,
                                          scene, numObjects);
 
       // Only color the object if there isn't an object any closer
@@ -115,23 +127,20 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
         frad = radialAttenuation(light, lDistance);
         fang = angularAttenuation(light, olDirection);
         
-        if (object->kind == OBJECT_KIND_SPHERE) {
-          sphere_t *sphere = (sphere_t *) object;
-          vector3_sub(normal, lIntersect, sphere->position); // Calculate normal
-          vector3_normalize(normal);
-
-          diffuseReflection(diff, sphere->diffuse_color, light->color,
-                            normal, olDirection);
-          specularReflection(spec, sphere->specular_color, light->color,
-                             direction, reflection, 20);
-        }
-        else if (object->kind == OBJECT_KIND_PLANE) {
-          plane_t *plane = (plane_t *) object;
-
-          diffuseReflection(diff, plane->diffuse_color, light->color,
-                            plane->normal, olDirection);
-          specularReflection(spec, plane->specular_color, light->color,
-                             direction, reflection, 20);
+        // Calculate the diffuse and specular light contributions
+        switch (object->kind) {
+          case OBJECT_KIND_SPHERE:
+            diffuseReflection(diff, ((sphere_t *) object)->diffuse_color,
+                              light->color, normal, olDirection);
+            specularReflection(spec, ((sphere_t *) object)->specular_color,
+                               light->color, direction, reflection, 20);
+            break;
+          case OBJECT_KIND_PLANE:
+            diffuseReflection(diff, ((plane_t *) object)->diffuse_color,
+                              light->color, normal, olDirection);
+            specularReflection(spec, ((plane_t *) object)->specular_color,
+                               light->color, direction, reflection, 20);
+            break;
         }
 
         // Add to color channels
@@ -149,6 +158,7 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
     // Clean up allocated memory
     free(tempVector);
     free(lIntersect);
+    free(lIntersectOffset);
     free(olDirection);
     free(diff);
     free(spec);
@@ -188,8 +198,8 @@ int renderImage(ppm_t *ppmImage, camera_t *camera,
       vector3_normalize(direction);
 
       // Get color from raycast
-      color = raycast(camera->position, direction, scene, numObjects,
-                      lights, numLights);
+      color = raycast(camera->position, direction,
+                      scene, numObjects, lights, numLights);
 
       // Populate pixel with color data
       ppmImage->pixels[i*ppmImage->width + j].r = (int) (color[0] * 255);
