@@ -8,7 +8,7 @@
 #include "ppmrw.h"
 #include "vector.h"
 #include "parsing.h"
-#include "helpers.h"
+#include "math_helpers.h"
 
 // Numeric constants
 #define PPM_OUTPUT_VERSION 3

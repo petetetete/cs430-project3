@@ -1,5 +1,5 @@
 // Include header file
-#include "helpers.h"
+#include "math_helpers.h"
 
 
 double radialAttenuation(light_t *light, double distance) {

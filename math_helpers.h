@@ -1,5 +1,5 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef MATH_HELPERS_H
+#define MATH_HELPERS_H
 
 // Include standard libraries
 #include <stdlib.h>
@@ -92,4 +92,4 @@ double sphereIntersect(vector3_t origin, vector3_t direction, sphere_t *sphere);
  */
 double planeIntersect(vector3_t origin, vector3_t direction, plane_t *plane);
 
-#endif  // HELPERS_H
+#endif  // MATH_HELPERS_H
