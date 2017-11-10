@@ -137,13 +137,15 @@ vector3_t raycast(vector3_t origin, vector3_t direction,
             diffuseReflection(diff, ((sphere_t *) object)->diffuse_color,
                               light->color, normal, olDirection);
             specularReflection(spec, ((sphere_t *) object)->specular_color,
-                               light->color, ovDirection, reflection, 20);
+                               light->color, ovDirection, reflection, 
+                               ((sphere_t *) object)->shininess);
             break;
           case OBJECT_KIND_PLANE:
             diffuseReflection(diff, ((plane_t *) object)->diffuse_color,
                               light->color, normal, olDirection);
             specularReflection(spec, ((plane_t *) object)->specular_color,
-                               light->color, ovDirection, reflection, 20);
+                               light->color, ovDirection, reflection,
+                               ((sphere_t *) object)->shininess);
             break;
         }
 

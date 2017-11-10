@@ -38,14 +38,13 @@ int parseCamera(camera_t *camera, char *line) {
     // Populate camera
     camera->width = width;
     camera->height = height;
-
     if (position[0] != INFINITY &&
         position[1] != INFINITY &&
         position[2] != INFINITY) {
       camera->position = position;
     }
     else {
-      camera->position = vector3_create(0, 0, 0);
+      camera->position = vector3_create(0, 0, 0); // Set default position
     }
 
     return 0;
@@ -167,12 +166,14 @@ int parseSphere(sphere_t *sphere, char *line) {
   vector3_t specularColor = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY);
   double radius = INFINITY;
+  double shininess = INFINITY;
 
   // Try to find elements in line
   char *diffuseColorStart = strstr(line, "diffuse_color:");
   char *specularColorStart = strstr(line, "specular_color:");
   char *positionStart = strstr(line, "position:");
   char *radiusStart = strstr(line, "radius:");
+  char *shininessStart = strstr(line, "shininess:");
 
   if (diffuseColorStart == NULL || specularColorStart == NULL ||
       positionStart == NULL || radiusStart == NULL) {
@@ -187,6 +188,9 @@ int parseSphere(sphere_t *sphere, char *line) {
   sscanf(positionStart + 9, " [%lf , %lf , %lf],",
          &position[0], &position[1], &position[2]);
   sscanf(radiusStart + 7, "%lf,", &radius);
+  if (shininessStart != NULL) {
+    sscanf(shininessStart + 10, "%lf,", &shininess);
+  }
 
   // Catch invalid values
   if (diffuseColor[0] == INFINITY ||
@@ -208,6 +212,12 @@ int parseSphere(sphere_t *sphere, char *line) {
     sphere->specular_color = specularColor;
     sphere->position = position;
     sphere->radius = radius;
+    if (shininess != INFINITY) {
+      sphere->shininess = shininess;
+    }
+    else {
+      sphere->shininess = DEFAULT_SHININESS; // Set default shininess
+    }
 
     return 0;
   }
@@ -223,14 +233,17 @@ int parsePlane(plane_t *plane, char *line) {
   vector3_t specularColor = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t position = vector3_create(INFINITY, INFINITY, INFINITY);
   vector3_t normal = vector3_create(INFINITY, INFINITY, INFINITY);
+  double shininess = INFINITY;
 
   // Try to find elements in line
   char *diffuseColorStart = strstr(line, "diffuse_color:");
   char *specularColorStart = strstr(line, "specular_color:");
   char *positionStart = strstr(line, "position:");
   char *normalStart = strstr(line, "normal:");
+  char *shininessStart = strstr(line, "shininess:");
 
-  if (diffuseColorStart == NULL || positionStart == NULL || normalStart == NULL) {
+  if (diffuseColorStart == NULL || specularColorStart == NULL ||
+      positionStart == NULL || normalStart == NULL) {
     return INVALID_PARSE_LINE;
   }
 
@@ -243,6 +256,9 @@ int parsePlane(plane_t *plane, char *line) {
          &position[0], &position[1], &position[2]);
   sscanf(normalStart + 7, " [%lf , %lf , %lf],",
          &normal[0], &normal[1], &normal[2]);
+  if (shininessStart != NULL) {
+    sscanf(shininessStart + 10, "%lf,", &shininess);
+  }
 
   // Catch invalid values
   if (diffuseColor[0] == INFINITY ||
@@ -266,6 +282,12 @@ int parsePlane(plane_t *plane, char *line) {
     plane->specular_color = specularColor;
     plane->position = position;
     plane->normal = normal;
+    if (shininess != INFINITY) {
+      plane->shininess = shininess;
+    }
+    else {
+      plane->shininess = DEFAULT_SHININESS; // Set default shininess
+    }
 
     vector3_normalize(plane->normal);
 
@@ -336,7 +358,8 @@ int *parseInput(camera_t *camera, object_t **scene,
     }
 
     if (errorStatus != 0) {
-      fprintf(stdout, "Warning: Invalid object on line %d of CSV\n", lineNumber);
+      fprintf(stdout,
+              "Warning: Invalid object on line %d of CSV\n", lineNumber);
     }
 
     lineNumber += 1;

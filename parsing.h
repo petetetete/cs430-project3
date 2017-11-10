@@ -21,6 +21,7 @@
 
 // Numeric constants
 #define MAX_LINE_LENGTH 256
+#define DEFAULT_SHININESS 20
 
 // Define types to be used in c file
 typedef struct object_t object_t;
@@ -46,6 +47,7 @@ struct sphere_t {
   vector3_t specular_color;
   vector3_t position;
   double radius;
+  double shininess;
 };
 
 struct plane_t {
@@ -54,6 +56,7 @@ struct plane_t {
   vector3_t specular_color;
   vector3_t position;
   vector3_t normal;
+  double shininess;
 };
 
 struct light_t {
@@ -82,9 +85,9 @@ int parseCamera(camera_t *camera, char *line);
 /**
  * Helper function used to parse light properties from string.
  * 
- * @param  camera  pointer to output light
- * @param  line    string containing light data to parse
- * @return         error status of parsing
+ * @param  light  pointer to output light
+ * @param  line   string containing light data to parse
+ * @return        error status of parsing
  */
 int parseLight(light_t *light, char *line);
 

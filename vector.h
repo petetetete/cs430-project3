@@ -6,7 +6,7 @@
 #include <math.h>
 
 // Define types to be used in c file
-typedef double* vector3_t;
+typedef double *vector3_t;
 
 
 /**
